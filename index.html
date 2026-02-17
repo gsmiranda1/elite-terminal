@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite V14.1 - Teclado Blindado</title>
+    <title>Elite V14.2 - Pro Terminal</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -23,38 +23,39 @@
         .calc-card, .chart-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #26292c; }
         .display-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
         
-        /* Estilo dos Inputs */
+        /* Inputs Interativos */
         .input-box { background: #111315; border: 2px solid #2d3035; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s; }
-        .input-box.active { border-color: var(--accent) !important; background: #1e1b26 !important; box-shadow: 0 0 15px rgba(157,125,242,0.2); }
+        .input-box.active { border-color: var(--accent) !important; background: #1e1b26 !important; box-shadow: 0 0 15px rgba(157,125,242,0.1); }
         .input-box.full-width { grid-column: span 2; }
         
         .label { font-size: 8px; color: var(--dim); font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; text-transform: uppercase; }
         .val-display { font-family: 'JetBrains Mono'; font-size: 19px; font-weight: bold; color: #fff; min-height: 24px; }
         
-        /* Botões do Teclado */
-        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .btn-num { background: #222529; border: 1px solid #333; padding: 18px; border-radius: 12px; color: white; font-family: 'JetBrains Mono'; font-size: 22px; font-weight: bold; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        /* Teclado Virtual */
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .btn-num { background: #222529; border: 1px solid #333; padding: 18px; border-radius: 10px; color: white; font-family: 'JetBrains Mono'; font-size: 20px; font-weight: bold; cursor: pointer; }
         .btn-num:active { background: var(--accent); color: #000; }
         .btn-bs { background: #352222; color: var(--red); border-color: #522; }
 
-        /* Tools e Status */
+        /* Seletores de Cor */
+        .selector-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 10px 0; }
+        .btn-sel { background: #111315; border: 1px solid #333; color: var(--dim); font-size: 9px; padding: 10px 2px; border-radius: 6px; cursor: pointer; font-weight: 800; transition: 0.2s; }
+        .btn-sel.active { background: var(--accent) !important; color: #000 !important; border-color: var(--accent) !important; }
+
+        /* Ferramentas */
         .tools-row { display: flex; gap: 8px; margin: 15px 0; }
         .btn-tool { flex: 1; background: #111315; border: 1px solid #333; color: var(--dim); padding: 10px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
         .btn-danger { color: var(--red); }
-        
-        .selector-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 10px 0; }
-        .btn-sel { background: #111315; border: 1px solid #333; color: var(--dim); font-size: 9px; padding: 10px 2px; border-radius: 6px; cursor: pointer; font-weight: 800; }
-        .btn-sel.active { background: var(--accent) !important; color: #000 !important; }
 
-        .table-container { max-height: 300px; overflow-y: auto; border-radius: 8px; background: #111315; }
+        .table-container { max-height: 300px; overflow-y: auto; border-radius: 8px; background: #111315; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        td { padding: 12px 8px; border-bottom: 1px solid #1a1c1e; }
-        .badge { padding: 5px 8px; border-radius: 4px; font-weight: 800; font-size: 9px; cursor: pointer; }
+        td { padding: 12px 8px; border-bottom: 1px solid #1a1c1e; font-family: 'JetBrains Mono'; }
+        .badge { padding: 5px 8px; border-radius: 4px; font-weight: 800; font-size: 9px; cursor: pointer; text-align: center; min-width: 60px; display: inline-block; }
         .b-wait { background: #222; color: #777; }
         .b-win { background: #1b3d2a; color: var(--green); }
         .b-red { background: #3d1b1b; color: var(--red); }
 
-        #cloud-status { position: fixed; bottom: 10px; right: 10px; font-size: 8px; color: var(--accent); font-weight: bold; z-index: 999; }
+        #cloud-status { position: fixed; bottom: 10px; right: 10px; font-size: 8px; color: var(--accent); font-weight: bold; z-index: 100; }
         @media (max-width: 850px) { .main-wrapper { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -65,7 +66,7 @@
 <div class="main-wrapper">
     <div class="calc-col">
         <div class="calc-card">
-            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.1 - TERMINAL</div>
+            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.2 - TERMINAL</div>
             
             <div class="display-grid">
                 <div id="box-fair" class="input-box active" onclick="setTarget('fair')">
@@ -86,9 +87,9 @@
                 </div>
                 <div class="selector-row">
                     <button id="m-multi" style="grid-column: span 2" class="btn-sel active" onclick="setMode('multi')">MÚLTIPLA</button>
-                    <button id="m-build" style="grid-column: span 2" class="btn-sel" onclick="setMode('build')">BUILDER</button>
+                    <button id="m-build" style="grid-column: span 2" class="btn-sel" onclick="setMode('build')">BUILDER (-15%)</button>
                 </div>
-                <button onclick="applyCombo()" style="width:100%; background:#25282c; border:1px solid #444; color:white; padding:10px; border-radius:8px; font-weight:800; font-size:10px; cursor:pointer;">APLICAR NO FAIR</button>
+                <button onclick="applyCombo()" style="width:100%; background:#25282c; border:1px solid #444; color:white; padding:10px; border-radius:8px; font-weight:800; font-size:10px; cursor:pointer;">CALCULAR E APLICAR NO FAIR</button>
             </div>
 
             <div class="selector-row">
@@ -117,23 +118,23 @@
     <div class="dash-col">
         <div class="chart-card">
             <div class="stats-row" style="display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin-bottom:15px;">
-                <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
-                    <span class="label">LUCRO</span><div id="stat-pl" style="font-weight:bold;">0.00u</div>
+                <div style="background:#111315; padding:12px; border-radius:10px; text-align:center; border:1px solid #222;">
+                    <span class="label">LUCRO TOTAL</span><div id="stat-pl" style="font-family:'JetBrains Mono'; font-weight:bold;">0.00u</div>
                 </div>
-                <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
-                    <span class="label">YIELD</span><div id="stat-roi" style="font-weight:bold;">0.0%</div>
+                <div style="background:#111315; padding:12px; border-radius:10px; text-align:center; border:1px solid #222;">
+                    <span class="label">YIELD %</span><div id="stat-roi" style="font-family:'JetBrains Mono'; font-weight:bold;">0.0%</div>
                 </div>
-                <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
-                    <span class="label">TRADES</span><div id="stat-count" style="font-weight:bold;">0</div>
+                <div style="background:#111315; padding:12px; border-radius:10px; text-align:center; border:1px solid #222;">
+                    <span class="label">ENTRADAS</span><div id="stat-count" style="font-family:'JetBrains Mono'; font-weight:bold;">0</div>
                 </div>
             </div>
 
-            <div style="height:180px;"><canvas id="profitChart"></canvas></div>
+            <div style="height:200px;"><canvas id="profitChart"></canvas></div>
             
             <div class="tools-row">
                 <button class="btn-tool" onclick="exportData()">Exportar CSV</button>
                 <button class="btn-tool" onclick="document.getElementById('csvIn').click()">Importar</button>
-                <button class="btn-tool btn-danger" onclick="clearAll()">Limpar</button>
+                <button class="btn-tool btn-danger" onclick="clearAll()">Limpar Tudo</button>
                 <input type="file" id="csvIn" style="display:none" onchange="importData(this)">
             </div>
 
@@ -145,7 +146,7 @@
 </div>
 
 <script>
-    // FIREBASE
+    // CONFIGURAÇÃO FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyA7trGWz9RnvuKrK2MULn6YYlu86dBJFdU",
         authDomain: "eliteterminal-2e66e.firebaseapp.com",
@@ -155,10 +156,9 @@
         messagingSenderId: "295546806711",
         appId: "1:295546806711:web:d7e359c22b474852a20832"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('elite_user_data');
 
-    // ESTADO
     let currentTarget = 'fair';
     let values = { fair: '', bookie: '', m1: '', m2: '', m3: '' };
     let kellyFactor = 20;
@@ -166,18 +166,24 @@
     let historyData = [];
     let myChart = null;
 
+    // SUPORTE AO TECLADO FÍSICO
+    window.addEventListener('keydown', (e) => {
+        if ((e.key >= '0' && e.key <= '9') || e.key === '.') press(e.key);
+        if (e.key === 'Backspace') { e.preventDefault(); press('DEL'); }
+        if (e.key === 'Enter') addBet();
+    });
+
     // ESCUTA FIREBASE
     db.on('value', snap => {
         const val = snap.val();
         historyData = val ? Object.values(val).reverse() : [];
         refreshUI();
-        document.getElementById('cloud-status').innerText = 'NUVEM ATUALIZADA: ' + new Date().toLocaleTimeString();
+        document.getElementById('cloud-status').innerText = 'NUVEM OK: ' + new Date().toLocaleTimeString();
     });
 
-    // FUNÇÕES DE INPUT (TECLADO)
     function setTarget(t) {
         currentTarget = t;
-        values[t] = ''; // Limpa ao tocar para resetar valor
+        values[t] = ''; 
         document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active'));
         document.getElementById('box-'+t).classList.add('active');
         refreshUI();
@@ -193,7 +199,6 @@
         refreshUI();
     }
 
-    // LOGICA CALCULADORA
     function setMode(m) {
         mode = m;
         document.getElementById('m-multi').classList.toggle('active', m==='multi');
@@ -220,7 +225,6 @@
     function calculate() {
         const f = parseFloat(values.fair), b = parseFloat(values.bookie);
         const resEl = document.getElementById('stake-res'), evEl = document.getElementById('ev-res');
-        
         if(f > 1 && b > 1) {
             const ev = (b/f)*100;
             evEl.innerText = `EV: ${ev.toFixed(2)}%`;
@@ -241,7 +245,6 @@
         renderStats();
     }
 
-    // GESTÃO DE DADOS
     function addBet() {
         const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
         if(!b || isNaN(s)) return;
@@ -287,22 +290,19 @@
     }
 
     function renderStats() {
-        const tb = document.getElementById('history-table'); tb.innerHTML = '';
+        const tb = document.getElementById('history-table'); if(!tb) return;
+        tb.innerHTML = '';
         let totalPL = 0, invest = 0, cData = [], accum = 0;
-        
         [...historyData].reverse().forEach(b => { if(b.status!=='WAIT'){ accum += b.pl; cData.push(accum); } });
-        
         historyData.forEach(b => {
             totalPL += b.pl; if(b.status!=='WAIT') invest += b.stake;
             let cls = b.status.includes('WIN')?'b-win':b.status.includes('RED')?'b-red':'b-wait';
             tb.innerHTML += `<tr><td>${b.date}</td><td>@${b.odd.toFixed(2)}</td><td>${b.stake.toFixed(2)}u</td><td style="color:${b.pl>=0?'var(--green)':'var(--red)'}">${b.pl.toFixed(2)}</td><td style="text-align:right"><span class="badge ${cls}" onclick="updateStatus('${b.id}')">${b.status}</span></td></tr>`;
         });
-
         document.getElementById('stat-pl').innerText = totalPL.toFixed(2)+'u';
         document.getElementById('stat-pl').style.color = totalPL>=0?'var(--green)':'var(--red)';
         document.getElementById('stat-roi').innerText = (invest>0?(totalPL/invest*100):0).toFixed(1)+'%';
         document.getElementById('stat-count').innerText = historyData.length;
-
         if(myChart) myChart.destroy();
         myChart = new Chart(document.getElementById('profitChart'), { 
             type: 'line', data: { labels: cData.map((_,i)=>i+1), datasets: [{ data: cData, borderColor: '#9d7df2', borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: 'rgba(157,125,242,0.05)', tension: 0.2 }] }, 
