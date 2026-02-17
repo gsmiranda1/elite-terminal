@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite V14.3 - Pro Terminal</title>
+    <title>Elite V14.4 - Pro Terminal</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,7 +12,6 @@
         :root {
             --bg: #0d0f11; --card: #16181a; --accent: #9d7df2; 
             --green: #4ade80; --red: #f87171; --text: #e2e2e2; --dim: #6b7280;
-            --blue: #60a5fa; --gold: #fbbf24;
         }
         body { 
             font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); 
@@ -23,24 +22,25 @@
         .calc-card, .chart-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #26292c; }
         .display-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
         
-        .input-box { background: #111315; border: 2px solid #2d3035; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s; outline: none; }
-        .input-box.active { border-color: var(--accent) !important; background: #1e1b26 !important; box-shadow: 0 0 15px rgba(157,125,242,0.15); }
+        /* Inputs */
+        .input-box { background: #111315; border: 2px solid #2d3035; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; }
+        .input-box.active { border-color: var(--accent) !important; background: #1e1b26 !important; box-shadow: 0 0 15px rgba(157,125,242,0.1); }
         
         .label { font-size: 8px; color: var(--dim); font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; text-transform: uppercase; pointer-events: none; }
         .val-display { font-family: 'JetBrains Mono'; font-size: 19px; font-weight: bold; color: #fff; min-height: 24px; pointer-events: none; }
         
+        /* Teclado */
         .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .btn-num { background: #222529; border: 1px solid #333; padding: 18px; border-radius: 10px; color: white; font-family: 'JetBrains Mono'; font-size: 20px; font-weight: bold; cursor: pointer; }
-        .btn-num:active { background: var(--accent); color: #000; }
+        .btn-num { background: #222529; border: 1px solid #333; padding: 18px; border-radius: 10px; color: white; font-family: 'JetBrains Mono'; font-size: 20px; font-weight: bold; cursor: pointer; outline: none; }
+        .btn-num:focus { outline: none; } /* Remove foco residual que causa erro no Enter */
         .btn-bs { background: #352222; color: var(--red); border-color: #522; }
 
         .selector-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 10px 0; }
-        .btn-sel { background: #111315; border: 1px solid #333; color: var(--dim); font-size: 9px; padding: 10px 2px; border-radius: 6px; cursor: pointer; font-weight: 800; }
+        .btn-sel { background: #111315; border: 1px solid #333; color: var(--dim); font-size: 9px; padding: 10px 2px; border-radius: 6px; cursor: pointer; font-weight: 800; outline: none; }
         .btn-sel.active { background: var(--accent) !important; color: #000 !important; }
 
         .tools-row { display: flex; gap: 8px; margin: 15px 0; }
         .btn-tool { flex: 1; background: #111315; border: 1px solid #333; color: var(--dim); padding: 10px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
-        .btn-danger { color: var(--red); }
 
         .table-container { max-height: 300px; overflow-y: auto; border-radius: 8px; background: #111315; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
@@ -50,18 +50,18 @@
         .b-win { background: #1b3d2a; color: var(--green); }
         .b-red { background: #3d1b1b; color: var(--red); }
 
-        #cloud-status { position: fixed; bottom: 10px; right: 10px; font-size: 8px; color: var(--accent); font-weight: bold; z-index: 100; }
+        #cloud-status { position: fixed; bottom: 10px; right: 10px; font-size: 8px; color: var(--accent); font-weight: bold; }
         @media (max-width: 850px) { .main-wrapper { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div id="cloud-status">SINCRONIZANDO...</div>
+<div id="cloud-status">CONECTANDO...</div>
 
 <div class="main-wrapper">
     <div class="calc-col">
         <div class="calc-card">
-            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.3 - TAB NAVIGATION</div>
+            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.4 - PRO TERMINAL</div>
             
             <div class="display-grid">
                 <div id="box-fair" class="input-box active" onclick="setTarget('fair')">
@@ -82,9 +82,9 @@
                 </div>
                 <div class="selector-row">
                     <button id="m-multi" style="grid-column: span 2" class="btn-sel active" onclick="setMode('multi')">MÚLTIPLA</button>
-                    <button id="m-build" style="grid-column: span 2" class="btn-sel" onclick="setMode('build')">BUILDER (-15%)</button>
+                    <button id="m-build" style="grid-column: span 2" class="btn-sel" onclick="setMode('build')">BUILDER</button>
                 </div>
-                <button onclick="applyCombo()" style="width:100%; background:#25282c; border:1px solid #444; color:white; padding:10px; border-radius:8px; font-weight:800; font-size:10px; cursor:pointer;">CALCULAR E APLICAR NO FAIR</button>
+                <button onclick="applyCombo()" style="width:100%; background:#25282c; border:1px solid #444; color:white; padding:10px; border-radius:8px; font-weight:800; font-size:10px; cursor:pointer;">APLICAR NO FAIR</button>
             </div>
 
             <div class="selector-row">
@@ -99,13 +99,21 @@
                 <div id="ev-res" style="font-size:11px; font-weight:800; color:var(--dim);">EV: 0.00%</div>
             </div>
 
-            <button onclick="addBet()" style="width:100%; background:var(--accent); color:#000; border:none; padding:18px; border-radius:12px; font-weight:800; font-size:14px; margin-bottom:15px; cursor:pointer;">REGISTRAR OPERAÇÃO</button>
+            <button id="btn-add" onclick="addBet()" style="width:100%; background:var(--accent); color:#000; border:none; padding:18px; border-radius:12px; font-weight:800; font-size:14px; margin-bottom:15px; cursor:pointer;">REGISTRAR OPERAÇÃO</button>
 
             <div class="numpad">
-                <button class="btn-num" onclick="press('1')">1</button><button class="btn-num" onclick="press('2')">2</button><button class="btn-num" onclick="press('3')">3</button>
-                <button class="btn-num" onclick="press('4')">4</button><button class="btn-num" onclick="press('5')">5</button><button class="btn-num" onclick="press('6')">6</button>
-                <button class="btn-num" onclick="press('7')">7</button><button class="btn-num" onclick="press('8')">8</button><button class="btn-num" onclick="press('9')">9</button>
-                <button class="btn-num" onclick="press('.')">.</button><button class="btn-num" onclick="press('0')">0</button><button class="btn-num btn-bs" onclick="press('DEL')">⌫</button>
+                <button class="btn-num" tabindex="-1" onclick="press('1')">1</button>
+                <button class="btn-num" tabindex="-1" onclick="press('2')">2</button>
+                <button class="btn-num" tabindex="-1" onclick="press('3')">3</button>
+                <button class="btn-num" tabindex="-1" onclick="press('4')">4</button>
+                <button class="btn-num" tabindex="-1" onclick="press('5')">5</button>
+                <button class="btn-num" tabindex="-1" onclick="press('6')">6</button>
+                <button class="btn-num" tabindex="-1" onclick="press('7')">7</button>
+                <button class="btn-num" tabindex="-1" onclick="press('8')">8</button>
+                <button class="btn-num" tabindex="-1" onclick="press('9')">9</button>
+                <button class="btn-num" tabindex="-1" onclick="press('.')">.</button>
+                <button class="btn-num" tabindex="-1" onclick="press('0')">0</button>
+                <button class="btn-num btn-bs" tabindex="-1" onclick="press('DEL')">⌫</button>
             </div>
         </div>
     </div>
@@ -113,29 +121,24 @@
     <div class="dash-col">
         <div class="chart-card">
             <div class="stats-row" style="display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin-bottom:15px;">
-                <div style="background:#111315; padding:12px; border-radius:10px; text-align:center; border:1px solid #222;">
-                    <span class="label">LUCRO TOTAL</span><div id="stat-pl" style="font-family:'JetBrains Mono'; font-weight:bold;">0.00u</div>
+                <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
+                    <span class="label">LUCRO</span><div id="stat-pl" style="font-weight:bold;">0.00u</div>
                 </div>
-                <div style="background:#111315; padding:12px; border-radius:10px; text-align:center; border:1px solid #222;">
-                    <span class="label">YIELD %</span><div id="stat-roi" style="font-family:'JetBrains Mono'; font-weight:bold;">0.0%</div>
+                <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
+                    <span class="label">YIELD</span><div id="stat-roi" style="font-weight:bold;">0.0%</div>
                 </div>
-                <div style="background:#111315; padding:12px; border-radius:10px; text-align:center; border:1px solid #222;">
-                    <span class="label">ENTRADAS</span><div id="stat-count" style="font-family:'JetBrains Mono'; font-weight:bold;">0</div>
+                <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
+                    <span class="label">TOTAL</span><div id="stat-count" style="font-weight:bold;">0</div>
                 </div>
             </div>
-
             <div style="height:200px;"><canvas id="profitChart"></canvas></div>
-            
             <div class="tools-row">
-                <button class="btn-tool" onclick="exportData()">Exportar CSV</button>
+                <button class="btn-tool" onclick="exportData()">Exportar</button>
                 <button class="btn-tool" onclick="document.getElementById('csvIn').click()">Importar</button>
-                <button class="btn-tool btn-danger" onclick="clearAll()">Limpar Tudo</button>
+                <button class="btn-tool" style="color:var(--red)" onclick="clearAll()">Limpar</button>
                 <input type="file" id="csvIn" style="display:none" onchange="importData(this)">
             </div>
-
-            <div class="table-container">
-                <table id="history-table"></table>
-            </div>
+            <div class="table-container"><table id="history-table"></table></div>
         </div>
     </div>
 </div>
@@ -150,51 +153,41 @@
         messagingSenderId: "295546806711",
         appId: "1:295546806711:web:d7e359c22b474852a20832"
     };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('elite_user_data');
 
     let currentTarget = 'fair';
     let values = { fair: '', bookie: '', m1: '', m2: '', m3: '' };
-    let kellyFactor = 20;
-    let mode = 'multi';
-    let historyData = [];
-    let myChart = null;
-
-    // ORDEM DE NAVEGAÇÃO (TAB)
     const tabOrder = ['fair', 'bookie', 'm1', 'm2', 'm3'];
+    let kellyFactor = 20, mode = 'multi', historyData = [], myChart = null;
 
-    // ESCUTA TECLADO FÍSICO (NÚMEROS + TAB)
+    // --- SISTEMA DE TECLADO FÍSICO CORRIGIDO ---
     window.addEventListener('keydown', (e) => {
-        // Lógica do TAB
+        // 1. Bloquear comportamento padrão do TAB e Navegar
         if (e.key === 'Tab') {
-            e.preventDefault(); // Impede o comportamento padrão do navegador
-            let index = tabOrder.indexOf(currentTarget);
-            if (e.shiftKey) {
-                // Shift + Tab (Voltar)
-                index = (index - 1 + tabOrder.length) % tabOrder.length;
-            } else {
-                // Tab (Avançar)
-                index = (index + 1) % tabOrder.length;
-            }
-            setTarget(tabOrder[index]);
+            e.preventDefault();
+            let idx = tabOrder.indexOf(currentTarget);
+            idx = e.shiftKey ? (idx - 1 + tabOrder.length) % tabOrder.length : (idx + 1) % tabOrder.length;
+            setTarget(tabOrder[idx]);
             return;
         }
 
+        // 2. Bloquear o Enter de repetir o último clique e disparar addBet
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.activeElement.blur(); // Remove foco de qualquer botão
+            addBet();
+            return;
+        }
+
+        // 3. Capturar Números e Backspace
         if ((e.key >= '0' && e.key <= '9') || e.key === '.') press(e.key);
         if (e.key === 'Backspace') { e.preventDefault(); press('DEL'); }
-        if (e.key === 'Enter') addBet();
-    });
-
-    db.on('value', snap => {
-        const val = snap.val();
-        historyData = val ? Object.values(val).reverse() : [];
-        refreshUI();
-        document.getElementById('cloud-status').innerText = 'NUVEM OK: ' + new Date().toLocaleTimeString();
     });
 
     function setTarget(t) {
         currentTarget = t;
-        values[t] = ''; // Limpa ao selecionar para facilitar nova digitação
+        values[t] = ''; 
         document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active'));
         document.getElementById('box-'+t).classList.add('active');
         refreshUI();
@@ -209,6 +202,14 @@
         }
         refreshUI();
     }
+
+    // --- RESTANTE DA LÓGICA ---
+    db.on('value', snap => {
+        const val = snap.val();
+        historyData = val ? Object.values(val).reverse() : [];
+        refreshUI();
+        document.getElementById('cloud-status').innerText = 'NUVEM OK: ' + new Date().toLocaleTimeString();
+    });
 
     function setMode(m) {
         mode = m;
