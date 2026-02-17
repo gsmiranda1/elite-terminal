@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite V12.6 - Scroll Focus</title>
+    <title>Elite V13.1 - Cloud Fixed</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@500;800&display=swap" rel="stylesheet">
     <style>
@@ -19,68 +21,43 @@
         }
         .main-wrapper { display: grid; grid-template-columns: 360px 1fr; gap: 20px; width: 100%; max-width: 1150px; }
         .calc-card, .chart-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #26292c; }
-        
-        /* Display Grid */
         .display-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
         .input-box { background: #111315; border: 2px solid #2d3035; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; }
         .input-box.active { border-color: var(--accent); background: #1e1b26; }
         .input-box.full-width { grid-column: span 2; }
         .input-box.min-val { background: #111315; border-color: #222; cursor: default; }
-        
         .label { font-size: 8px; color: var(--dim); font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; text-transform: uppercase; }
         .val-display { font-family: 'JetBrains Mono'; font-size: 19px; font-weight: bold; color: #fff; }
-
-        /* Teclado */
         .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .btn-num { background: #222529; border: none; padding: 15px; border-radius: 10px; color: white; font-family: 'JetBrains Mono'; font-size: 20px; font-weight: bold; cursor: pointer; }
         .btn-bs { background: #352222; color: var(--red); }
-
-        /* Seletores */
         .selector-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 8px; }
         .btn-sel { background: #111315; border: 1px solid #333; color: var(--dim); font-size: 8px; padding: 8px 2px; border-radius: 6px; cursor: pointer; font-weight: 800; }
         .btn-sel.active { background: var(--accent); color: #000; border-color: var(--accent); }
-
-        /* Registro de Apostas com Scroll Personalizado */
-        .table-container { 
-            max-height: 280px; 
-            overflow-y: scroll; /* Força a barra para teste visual */
-            margin-top: 15px; 
-            border-radius: 8px;
-            background: #111315;
-            padding: 5px;
-        }
-
-        /* Estilização da Barra de Rolagem (Chrome, Edge, Safari) */
+        .table-container { max-height: 280px; overflow-y: scroll; margin-top: 15px; border-radius: 8px; background: #111315; padding: 5px; }
         .table-container::-webkit-scrollbar { width: 6px; }
-        .table-container::-webkit-scrollbar-track { background: #111315; border-radius: 10px; }
-        .table-container::-webkit-scrollbar-thumb { background: #2d3035; border-radius: 10px; border: 1px solid #3d4146; }
-        .table-container::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-        /* Firefox */
-        .table-container { scrollbar-width: thin; scrollbar-color: #2d3035 #111315; }
-
+        .table-container::-webkit-scrollbar-thumb { background: #2d3035; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         td { padding: 12px 8px; border-bottom: 1px solid #1a1c1e; font-family: 'JetBrains Mono'; }
-
         .badge { padding: 4px 6px; border-radius: 4px; font-weight: 800; font-size: 8px; min-width: 55px; text-align: center; display: inline-block; cursor: pointer; }
         .b-wait { background: #222; color: #777; }
         .b-win { background: #1b3d2a; color: var(--green); }
         .b-red { background: #3d1b1b; color: var(--red); }
-
-        /* Stats */
         .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .stat-box { background: #111315; padding: 12px; border-radius: 10px; text-align: center; border: 1px solid #222; }
         .stat-val { font-family: 'JetBrains Mono'; font-size: 16px; font-weight: bold; }
-
-        @media (max-width: 850px) { .main-wrapper { grid-template-columns: 1fr; } .table-container { max-height: 350px; } }
+        #cloud-status { position: fixed; bottom: 10px; right: 10px; font-size: 8px; color: var(--accent); font-weight: bold; }
+        @media (max-width: 850px) { .main-wrapper { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
+<div id="cloud-status">INICIALIZANDO...</div>
+
 <div class="main-wrapper">
     <div class="calc-col" style="display:flex; flex-direction:column; gap:15px;">
         <div class="calc-card">
-            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V12.6 PRO TERMINAL</div>
+            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V13.1 - CLOUD PRO</div>
             
             <div class="display-grid">
                 <div id="box-fair" class="input-box active" onclick="setTarget('fair')">
@@ -140,8 +117,8 @@
         <div class="chart-card">
             <div class="stats-row">
                 <div class="stat-box"><div class="label">LUCRO TOTAL</div><div id="stat-pl" class="stat-val">0.00u</div></div>
-                <div class="stat-box"><div class="label">ROI / YIELD</div><div id="stat-roi" class="stat-val">0.0%</div></div>
-                <div class="stat-box"><div class="label">BETS</div><div id="stat-count" class="stat-val">0</div></div>
+                <div class="stat-box"><div class="label">YIELD %</div><div id="stat-roi" class="stat-val">0.0%</div></div>
+                <div class="stat-box"><div class="label">ENTRADAS</div><div id="stat-count" class="stat-val">0</div></div>
             </div>
 
             <div style="height:220px; position:relative; margin-bottom:10px;">
@@ -151,24 +128,58 @@
             <div class="table-container">
                 <table id="history-table"></table>
             </div>
-            
-            <div style="margin-top:20px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                 <button onclick="exportCSV()" style="background:#25282c; border:1px solid #444; color:white; padding:12px; border-radius:8px; font-size:9px; cursor:pointer; font-weight:800;">CSV</button>
-                 <button onclick="exportBackup()" style="background:#25282c; border:1px solid var(--blue); color:var(--blue); padding:12px; border-radius:8px; font-size:9px; cursor:pointer; font-weight:800;">BACKUP</button>
-                 <label style="background:#25282c; border:1px solid var(--accent); color:var(--accent); padding:12px; border-radius:8px; font-size:9px; cursor:pointer; font-weight:800; text-align:center;">
-                    IMPORTAR <input type="file" style="display:none" onchange="importBackup(event)">
-                 </label>
-            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Toda a lógica das versões anteriores foi mantida intacta
+    // ==========================================
+    // CONFIGURAÇÃO FIREBASE
+    // ==========================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyA7trGWz9RnvuKrK2MULn6YYlu86dBJFdU",
+        authDomain: "eliteterminal-2e66e.firebaseapp.com",
+        databaseURL: "https://eliteterminal-2e66e-default-rtdb.firebaseio.com",
+        projectId: "eliteterminal-2e66e",
+        storageBucket: "eliteterminal-2e66e.firebasestorage.app",
+        messagingSenderId: "295546806711",
+        appId: "1:295546806711:web:d7e359c22b474852a20832"
+    };
+
+    // Inicialização com Fallback de Status
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        document.getElementById('cloud-status').innerText = 'CONECTADO À NUVEM';
+    } catch (e) {
+        document.getElementById('cloud-status').innerText = 'ERRO DE CONFIGURAÇÃO';
+        console.error(e);
+    }
+
+    const db = firebase.database().ref('elite_user_data');
+
+    // ==========================================
+    // LÓGICA DO TERMINAL
+    // ==========================================
     let target = 'fair', comboMode = 'multi', kellyDivisor = 20;
     let vals = { fair: '', bookie: '', m1: '', m2: '', m3: '' };
-    let history = JSON.parse(localStorage.getItem('elite_db_v12_6')) || [];
+    let history = [];
     let chart = null;
+
+    // Escuta em tempo real com tratamento de erro de permissão
+    db.on('value', (snapshot) => {
+        const data = snapshot.val();
+        history = data ? Object.values(data).reverse() : [];
+        render();
+        document.getElementById('cloud-status').innerText = 'NUVEM ATUALIZADA: ' + new Date().toLocaleTimeString();
+    }, (error) => {
+        if (error.message.includes("permission_denied")) {
+            document.getElementById('cloud-status').innerText = 'ERRO: REGRAS BLOQUEADAS NO FIREBASE';
+        } else {
+            document.getElementById('cloud-status').innerText = 'ERRO DE CONEXÃO';
+        }
+    });
 
     function setTarget(t) {
         target = t; vals[target] = '';
@@ -177,26 +188,9 @@
         updateUI();
     }
 
-    function setMode(m) {
-        comboMode = m;
-        document.getElementById('m-multi').classList.toggle('active', m==='multi');
-        document.getElementById('m-build').classList.toggle('active', m==='build');
-        calc();
-    }
-
-    function setKelly(k) {
-        kellyDivisor = k;
-        document.querySelectorAll('[id^="k-"]').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('k-'+k).classList.add('active');
-        calc();
-    }
-
-    function input(n) {
-        if(n === '.' && vals[target].includes('.')) return;
-        if(vals[target].length < 6) vals[target] += n;
-        updateUI();
-    }
-
+    function setMode(m) { comboMode = m; calc(); }
+    function setKelly(k) { kellyDivisor = k; calc(); }
+    function input(n) { if(n === '.' && vals[target].includes('.')) return; if(vals[target].length < 6) vals[target] += n; updateUI(); }
     function bs() { vals[target] = vals[target].slice(0, -1); updateUI(); }
 
     function applyCombo() {
@@ -204,8 +198,7 @@
         let res = v1 * v2 * v3;
         if(comboMode === 'build') res *= 0.85;
         vals.fair = res.toFixed(2);
-        updateUI();
-        setTarget('bookie');
+        updateUI(); setTarget('bookie');
     }
 
     function updateUI() {
@@ -236,12 +229,13 @@
     function addBet() {
         const b = parseFloat(vals.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
         if(!b || isNaN(s)) return;
-        history.unshift({ id: Date.now(), odd: b, stake: s, status: 'WAIT', pl: 0 });
-        save();
+        const newBet = { id: Date.now().toString(), odd: b, stake: s, status: 'WAIT', pl: 0 };
+        firebase.database().ref('elite_user_data/' + newBet.id).set(newBet);
     }
 
     function cycleStatus(id) {
-        const b = history.find(x => x.id === id);
+        const b = history.find(x => x.id == id);
+        if(!b) return;
         const s = ['WAIT', 'WIN', '1/2 WIN', 'VOID', '1/2 RED', 'RED'];
         b.status = s[(s.indexOf(b.status)+1)%s.length];
         if(b.status==='WIN') b.pl = (b.odd-1)*b.stake;
@@ -249,50 +243,35 @@
         else if(b.status==='1/2 RED') b.pl = -(b.stake/2);
         else if(b.status==='RED') b.pl = -b.stake;
         else b.pl = 0;
-        save();
-    }
-
-    function save() {
-        localStorage.setItem('elite_db_v12_6', JSON.stringify(history));
-        render();
+        firebase.database().ref('elite_user_data/' + id).update(b);
     }
 
     function render() {
         const tb = document.getElementById('history-table'); tb.innerHTML = '';
         let total = 0, invest = 0, chartData = [], accum = 0;
-        [...history].reverse().forEach((b) => { if(b.status !== 'WAIT') { accum += b.pl; chartData.push(accum); } });
+        
+        [...history].reverse().forEach((b) => { 
+            if(b.status !== 'WAIT') { accum += b.pl; chartData.push(accum); } 
+        });
+
         history.forEach(b => {
             total += b.pl; if(b.status!=='WAIT') invest += b.stake;
             let c = b.status.includes('WIN')?'b-win':b.status.includes('RED')?'b-red':'b-wait';
             tb.innerHTML += `<tr><td>@${b.odd.toFixed(2)}</td><td>${b.stake.toFixed(2)}u</td><td style="color:${b.pl>=0?'var(--green)':'var(--red)'}">${b.pl>=0?'+':''}${b.pl.toFixed(2)}</td><td style="text-align:right"><span class="badge ${c}" onclick="cycleStatus(${b.id})">${b.status}</span></td></tr>`;
         });
+
         document.getElementById('stat-pl').innerText = total.toFixed(2)+'u';
         document.getElementById('stat-pl').style.color = total>=0?'var(--green)':'var(--red)';
         document.getElementById('stat-roi').innerText = (invest>0?(total/invest*100):0).toFixed(1)+'%';
         document.getElementById('stat-count').innerText = history.length;
+
         if(chart) chart.destroy();
-        chart = new Chart(document.getElementById('profitChart'), { type: 'line', data: { labels: chartData.map((_,i)=>i+1), datasets: [{ data: chartData, borderColor: '#9d7df2', borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: 'rgba(157,125,242,0.05)', tension: 0.2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#222' } } } } });
+        chart = new Chart(document.getElementById('profitChart'), { 
+            type: 'line', 
+            data: { labels: chartData.map((_,i)=>i+1), datasets: [{ data: chartData, borderColor: '#9d7df2', borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: 'rgba(157,125,242,0.05)', tension: 0.2 }] }, 
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#222' } } } } 
+        });
     }
-
-    function exportBackup() {
-        const blob = new Blob([JSON.stringify(history)], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `elite_backup_${new Date().getTime()}.json`; a.click();
-    }
-
-    function importBackup(e) {
-        const reader = new FileReader();
-        reader.onload = (ev) => { try { history = JSON.parse(ev.target.result); save(); } catch(err) { alert("Erro!"); } };
-        reader.readAsText(e.target.files[0]);
-    }
-
-    function exportCSV() {
-        let c = "Data,Odd,Stake,PL,Status\n";
-        history.forEach(r => c += `${new Date(r.id).toLocaleDateString()},${r.odd},${r.stake},${r.pl},${r.status}\n`);
-        window.open("data:text/csv;charset=utf-8," + encodeURI(c));
-    }
-    
-    render();
 </script>
 </body>
 </html>
