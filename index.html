@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite V14.4 - Pro Terminal</title>
+    <title>Elite V14.6 - Edge Detector</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,7 +11,7 @@
     <style>
         :root {
             --bg: #0d0f11; --card: #16181a; --accent: #9d7df2; 
-            --green: #4ade80; --red: #f87171; --text: #e2e2e2; --dim: #6b7280;
+            --green: #4ade80; --red: #f87171; --text: #e2e2e2; --dim: #6b7280; --gold: #fbbf24;
         }
         body { 
             font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); 
@@ -22,17 +22,14 @@
         .calc-card, .chart-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #26292c; }
         .display-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
         
-        /* Inputs */
         .input-box { background: #111315; border: 2px solid #2d3035; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; }
         .input-box.active { border-color: var(--accent) !important; background: #1e1b26 !important; box-shadow: 0 0 15px rgba(157,125,242,0.1); }
         
         .label { font-size: 8px; color: var(--dim); font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; text-transform: uppercase; pointer-events: none; }
         .val-display { font-family: 'JetBrains Mono'; font-size: 19px; font-weight: bold; color: #fff; min-height: 24px; pointer-events: none; }
         
-        /* Teclado */
         .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .btn-num { background: #222529; border: 1px solid #333; padding: 18px; border-radius: 10px; color: white; font-family: 'JetBrains Mono'; font-size: 20px; font-weight: bold; cursor: pointer; outline: none; }
-        .btn-num:focus { outline: none; } /* Remove foco residual que causa erro no Enter */
         .btn-bs { background: #352222; color: var(--red); border-color: #522; }
 
         .selector-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 10px 0; }
@@ -56,12 +53,12 @@
 </head>
 <body>
 
-<div id="cloud-status">CONECTANDO...</div>
+<div id="cloud-status">SINCRONIZANDO...</div>
 
 <div class="main-wrapper">
     <div class="calc-col">
         <div class="calc-card">
-            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.4 - PRO TERMINAL</div>
+            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.6 - PRO TERMINAL</div>
             
             <div class="display-grid">
                 <div id="box-fair" class="input-box active" onclick="setTarget('fair')">
@@ -96,7 +93,16 @@
 
             <div style="text-align:center; margin:15px 0; padding:15px; background:#000; border-radius:12px; border: 1px solid #2d3035;">
                 <div id="stake-res" style="font-family:'JetBrains Mono'; font-size:36px; font-weight:bold; color:var(--dim);">0.00u</div>
-                <div id="ev-res" style="font-size:11px; font-weight:800; color:var(--dim);">EV: 0.00%</div>
+                <div style="display:flex; justify-content: space-between; margin-top:10px; border-top:1px solid #222; padding-top:10px;">
+                    <div style="text-align:left">
+                        <span class="label">EV ATUAL</span>
+                        <div id="ev-res" style="font-size:12px; font-weight:800; color:var(--dim);">0.00%</div>
+                    </div>
+                    <div style="text-align:right">
+                        <span class="label">ENTRAR ATÉ</span>
+                        <div id="limit-res" style="font-size:12px; font-weight:800; color:var(--accent);">@ 0.00</div>
+                    </div>
+                </div>
             </div>
 
             <button id="btn-add" onclick="addBet()" style="width:100%; background:var(--accent); color:#000; border:none; padding:18px; border-radius:12px; font-weight:800; font-size:14px; margin-bottom:15px; cursor:pointer;">REGISTRAR OPERAÇÃO</button>
@@ -161,9 +167,7 @@
     const tabOrder = ['fair', 'bookie', 'm1', 'm2', 'm3'];
     let kellyFactor = 20, mode = 'multi', historyData = [], myChart = null;
 
-    // --- SISTEMA DE TECLADO FÍSICO CORRIGIDO ---
     window.addEventListener('keydown', (e) => {
-        // 1. Bloquear comportamento padrão do TAB e Navegar
         if (e.key === 'Tab') {
             e.preventDefault();
             let idx = tabOrder.indexOf(currentTarget);
@@ -171,16 +175,12 @@
             setTarget(tabOrder[idx]);
             return;
         }
-
-        // 2. Bloquear o Enter de repetir o último clique e disparar addBet
         if (e.key === 'Enter') {
             e.preventDefault();
-            document.activeElement.blur(); // Remove foco de qualquer botão
+            document.activeElement.blur();
             addBet();
             return;
         }
-
-        // 3. Capturar Números e Backspace
         if ((e.key >= '0' && e.key <= '9') || e.key === '.') press(e.key);
         if (e.key === 'Backspace') { e.preventDefault(); press('DEL'); }
     });
@@ -203,7 +203,6 @@
         refreshUI();
     }
 
-    // --- RESTANTE DA LÓGICA ---
     db.on('value', snap => {
         const val = snap.val();
         historyData = val ? Object.values(val).reverse() : [];
@@ -236,16 +235,47 @@
 
     function calculate() {
         const f = parseFloat(values.fair), b = parseFloat(values.bookie);
-        const resEl = document.getElementById('stake-res'), evEl = document.getElementById('ev-res');
-        if(f > 1 && b > 1) {
-            const ev = (b/f)*100;
-            evEl.innerText = `EV: ${ev.toFixed(2)}%`;
-            if(ev >= 105) {
-                let edge = (b/f) - 1;
-                let st = Math.max(0.25, Math.round(( (edge * 100) / (kellyFactor/4) ) * 4) / 4);
-                resEl.innerText = st.toFixed(2)+"u"; resEl.style.color = "var(--green)";
-            } else { resEl.innerText = "SEM VALOR"; resEl.style.color = "var(--red)"; }
-        } else { resEl.innerText = "0.00u"; resEl.style.color = "var(--dim)"; }
+        const resEl = document.getElementById('stake-res');
+        const evEl = document.getElementById('ev-res');
+        const limEl = document.getElementById('limit-res');
+        
+        if(f > 1) {
+            limEl.innerText = `@ ${f.toFixed(2)}`;
+            
+            if(b > 1) {
+                const ev = (b/f)*100;
+                evEl.innerText = `${ev.toFixed(2)}%`;
+                
+                if(ev > 100) {
+                    let edge = (b/f) - 1;
+                    let rawStake = (edge * 100) / (kellyFactor/4);
+                    let roundedStake = Math.round(rawStake * 4) / 4;
+                    
+                    if (roundedStake >= 0.25) {
+                        resEl.innerText = roundedStake.toFixed(2) + "u";
+                        resEl.style.color = "var(--green)";
+                        evEl.style.color = "var(--green)";
+                    } else {
+                        resEl.innerText = "STAKE MIN";
+                        resEl.style.color = "var(--red)";
+                        evEl.style.color = "var(--gold)";
+                    }
+                } else {
+                    resEl.innerText = "SEM VALOR";
+                    resEl.style.color = "var(--red)";
+                    evEl.style.color = "var(--red)";
+                }
+            } else {
+                resEl.innerText = "0.00u";
+                evEl.innerText = "0.00%";
+                evEl.style.color = "var(--dim)";
+            }
+        } else {
+            resEl.innerText = "0.00u";
+            limEl.innerText = "@ 0.00";
+            evEl.innerText = "0.00%";
+            resEl.style.color = "var(--dim)";
+        }
     }
 
     function refreshUI() {
