@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite V14.2 - Pro Terminal</title>
+    <title>Elite V14.3 - Pro Terminal</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -23,26 +23,21 @@
         .calc-card, .chart-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #26292c; }
         .display-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
         
-        /* Inputs Interativos */
-        .input-box { background: #111315; border: 2px solid #2d3035; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s; }
-        .input-box.active { border-color: var(--accent) !important; background: #1e1b26 !important; box-shadow: 0 0 15px rgba(157,125,242,0.1); }
-        .input-box.full-width { grid-column: span 2; }
+        .input-box { background: #111315; border: 2px solid #2d3035; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s; outline: none; }
+        .input-box.active { border-color: var(--accent) !important; background: #1e1b26 !important; box-shadow: 0 0 15px rgba(157,125,242,0.15); }
         
-        .label { font-size: 8px; color: var(--dim); font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; text-transform: uppercase; }
-        .val-display { font-family: 'JetBrains Mono'; font-size: 19px; font-weight: bold; color: #fff; min-height: 24px; }
+        .label { font-size: 8px; color: var(--dim); font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; text-transform: uppercase; pointer-events: none; }
+        .val-display { font-family: 'JetBrains Mono'; font-size: 19px; font-weight: bold; color: #fff; min-height: 24px; pointer-events: none; }
         
-        /* Teclado Virtual */
         .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .btn-num { background: #222529; border: 1px solid #333; padding: 18px; border-radius: 10px; color: white; font-family: 'JetBrains Mono'; font-size: 20px; font-weight: bold; cursor: pointer; }
         .btn-num:active { background: var(--accent); color: #000; }
         .btn-bs { background: #352222; color: var(--red); border-color: #522; }
 
-        /* Seletores de Cor */
         .selector-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 10px 0; }
-        .btn-sel { background: #111315; border: 1px solid #333; color: var(--dim); font-size: 9px; padding: 10px 2px; border-radius: 6px; cursor: pointer; font-weight: 800; transition: 0.2s; }
-        .btn-sel.active { background: var(--accent) !important; color: #000 !important; border-color: var(--accent) !important; }
+        .btn-sel { background: #111315; border: 1px solid #333; color: var(--dim); font-size: 9px; padding: 10px 2px; border-radius: 6px; cursor: pointer; font-weight: 800; }
+        .btn-sel.active { background: var(--accent) !important; color: #000 !important; }
 
-        /* Ferramentas */
         .tools-row { display: flex; gap: 8px; margin: 15px 0; }
         .btn-tool { flex: 1; background: #111315; border: 1px solid #333; color: var(--dim); padding: 10px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
         .btn-danger { color: var(--red); }
@@ -66,7 +61,7 @@
 <div class="main-wrapper">
     <div class="calc-col">
         <div class="calc-card">
-            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.2 - TERMINAL</div>
+            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.3 - TAB NAVIGATION</div>
             
             <div class="display-grid">
                 <div id="box-fair" class="input-box active" onclick="setTarget('fair')">
@@ -146,7 +141,6 @@
 </div>
 
 <script>
-    // CONFIGURAÇÃO FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyA7trGWz9RnvuKrK2MULn6YYlu86dBJFdU",
         authDomain: "eliteterminal-2e66e.firebaseapp.com",
@@ -166,14 +160,31 @@
     let historyData = [];
     let myChart = null;
 
-    // SUPORTE AO TECLADO FÍSICO
+    // ORDEM DE NAVEGAÇÃO (TAB)
+    const tabOrder = ['fair', 'bookie', 'm1', 'm2', 'm3'];
+
+    // ESCUTA TECLADO FÍSICO (NÚMEROS + TAB)
     window.addEventListener('keydown', (e) => {
+        // Lógica do TAB
+        if (e.key === 'Tab') {
+            e.preventDefault(); // Impede o comportamento padrão do navegador
+            let index = tabOrder.indexOf(currentTarget);
+            if (e.shiftKey) {
+                // Shift + Tab (Voltar)
+                index = (index - 1 + tabOrder.length) % tabOrder.length;
+            } else {
+                // Tab (Avançar)
+                index = (index + 1) % tabOrder.length;
+            }
+            setTarget(tabOrder[index]);
+            return;
+        }
+
         if ((e.key >= '0' && e.key <= '9') || e.key === '.') press(e.key);
         if (e.key === 'Backspace') { e.preventDefault(); press('DEL'); }
         if (e.key === 'Enter') addBet();
     });
 
-    // ESCUTA FIREBASE
     db.on('value', snap => {
         const val = snap.val();
         historyData = val ? Object.values(val).reverse() : [];
@@ -183,7 +194,7 @@
 
     function setTarget(t) {
         currentTarget = t;
-        values[t] = ''; 
+        values[t] = ''; // Limpa ao selecionar para facilitar nova digitação
         document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active'));
         document.getElementById('box-'+t).classList.add('active');
         refreshUI();
