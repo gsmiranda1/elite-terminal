@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite V14.6 - Edge Detector</title>
+    <title>Elite V14.7 - Focus Edition</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -28,7 +28,13 @@
         .label { font-size: 8px; color: var(--dim); font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; text-transform: uppercase; pointer-events: none; }
         .val-display { font-family: 'JetBrains Mono'; font-size: 19px; font-weight: bold; color: #fff; min-height: 24px; pointer-events: none; }
         
-        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        /* Teclado e Modo Foco */
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; transition: all 0.3s ease; }
+        .numpad.hidden { display: none; }
+        
+        .btn-toggle-pad { width: 100%; background: transparent; border: 1px dashed #333; color: var(--dim); font-size: 8px; padding: 6px; margin-bottom: 12px; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: 800; }
+        .btn-toggle-pad:hover { border-color: var(--accent); color: var(--accent); }
+
         .btn-num { background: #222529; border: 1px solid #333; padding: 18px; border-radius: 10px; color: white; font-family: 'JetBrains Mono'; font-size: 20px; font-weight: bold; cursor: pointer; outline: none; }
         .btn-bs { background: #352222; color: var(--red); border-color: #522; }
 
@@ -58,7 +64,7 @@
 <div class="main-wrapper">
     <div class="calc-col">
         <div class="calc-card">
-            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.6 - PRO TERMINAL</div>
+            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.7 - FOCUS EDITION</div>
             
             <div class="display-grid">
                 <div id="box-fair" class="input-box active" onclick="setTarget('fair')">
@@ -107,7 +113,9 @@
 
             <button id="btn-add" onclick="addBet()" style="width:100%; background:var(--accent); color:#000; border:none; padding:18px; border-radius:12px; font-weight:800; font-size:14px; margin-bottom:15px; cursor:pointer;">REGISTRAR OPERAÇÃO</button>
 
-            <div class="numpad">
+            <button class="btn-toggle-pad" onclick="toggleNumpad()" tabindex="-1">⌨ Alternar Teclado Visual</button>
+
+            <div class="numpad" id="numpad-control">
                 <button class="btn-num" tabindex="-1" onclick="press('1')">1</button>
                 <button class="btn-num" tabindex="-1" onclick="press('2')">2</button>
                 <button class="btn-num" tabindex="-1" onclick="press('3')">3</button>
@@ -167,6 +175,14 @@
     const tabOrder = ['fair', 'bookie', 'm1', 'm2', 'm3'];
     let kellyFactor = 20, mode = 'multi', historyData = [], myChart = null;
 
+    // --- FUNÇÃO MODO FOCO ---
+    function toggleNumpad() {
+        const pad = document.getElementById('numpad-control');
+        pad.classList.toggle('hidden');
+        localStorage.setItem('numpadHidden', pad.classList.contains('hidden'));
+    }
+
+    // --- TECLADO FÍSICO ---
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Tab') {
             e.preventDefault();
@@ -241,16 +257,13 @@
         
         if(f > 1) {
             limEl.innerText = `@ ${f.toFixed(2)}`;
-            
             if(b > 1) {
                 const ev = (b/f)*100;
                 evEl.innerText = `${ev.toFixed(2)}%`;
-                
                 if(ev > 100) {
                     let edge = (b/f) - 1;
                     let rawStake = (edge * 100) / (kellyFactor/4);
                     let roundedStake = Math.round(rawStake * 4) / 4;
-                    
                     if (roundedStake >= 0.25) {
                         resEl.innerText = roundedStake.toFixed(2) + "u";
                         resEl.style.color = "var(--green)";
@@ -261,20 +274,15 @@
                         evEl.style.color = "var(--gold)";
                     }
                 } else {
-                    resEl.innerText = "SEM VALOR";
+                    resEl.innerText = "SEM EDGE";
                     resEl.style.color = "var(--red)";
                     evEl.style.color = "var(--red)";
                 }
             } else {
-                resEl.innerText = "0.00u";
-                evEl.innerText = "0.00%";
-                evEl.style.color = "var(--dim)";
+                resEl.innerText = "0.00u"; evEl.innerText = "0.00%"; evEl.style.color = "var(--dim)";
             }
         } else {
-            resEl.innerText = "0.00u";
-            limEl.innerText = "@ 0.00";
-            evEl.innerText = "0.00%";
-            resEl.style.color = "var(--dim)";
+            resEl.innerText = "0.00u"; limEl.innerText = "@ 0.00"; evEl.innerText = "0.00%"; resEl.style.color = "var(--dim)";
         }
     }
 
@@ -351,6 +359,13 @@
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#222' } } } } 
         });
     }
+
+    // CARREGA PREFERÊNCIA DO TECLADO AO ABRIR
+    window.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem('numpadHidden') === 'true') {
+            document.getElementById('numpad-control').classList.add('hidden');
+        }
+    });
 </script>
 </body>
 </html>
