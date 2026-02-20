@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite V14.7 - Focus Edition</title>
+    <title>Elite V14.8 - Pinnacle Pro Scanner (Stake Mate Engine)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -28,7 +28,18 @@
         .label { font-size: 8px; color: var(--dim); font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; text-transform: uppercase; pointer-events: none; }
         .val-display { font-family: 'JetBrains Mono'; font-size: 19px; font-weight: bold; color: #fff; min-height: 24px; pointer-events: none; }
         
-        /* Teclado e Modo Foco */
+        .fair-display-box { 
+            background: rgba(157,125,242,0.05); border: 1px dashed var(--accent); 
+            padding: 10px; border-radius: 12px; margin-bottom: 12px; text-align: center;
+        }
+
+        .btn-novig {
+            width: 100%; padding: 10px; border-radius: 8px; font-size: 10px; font-weight: 800; cursor: default;
+            border: 1px solid #333; margin-bottom: 12px; transition: 0.3s;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(157,125,242,0.1); color: var(--accent); border-color: var(--accent);
+        }
+
         .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; transition: all 0.3s ease; }
         .numpad.hidden { display: none; }
         
@@ -64,17 +75,27 @@
 <div class="main-wrapper">
     <div class="calc-col">
         <div class="calc-card">
-            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.7 - FOCUS EDITION</div>
+            <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.8 - PRO SCANNER</div>
             
+            <button id="btn-novig" class="btn-novig">
+                <span>GATILHO DE STAKE (MERCADO ABERTO)</span>
+                <span id="novig-status">VIG 3% AUTO</span>
+            </button>
+
             <div class="display-grid">
                 <div id="box-fair" class="input-box active" onclick="setTarget('fair')">
-                    <span class="label">ODD JUSTA</span>
+                    <span class="label">ODD DE REFERÊNCIA</span>
                     <div id="val-fair" class="val-display">---</div>
                 </div>
                 <div id="box-bookie" class="input-box" onclick="setTarget('bookie')">
-                    <span class="label">ODD CASA</span>
+                    <span class="label">ODD AVALIADA</span>
                     <div id="val-bookie" class="val-display">---</div>
                 </div>
+            </div>
+
+            <div class="fair-display-box">
+                <span class="label" style="color:var(--accent)">Odd Justa (+3% Margem)</span>
+                <div id="calc-fair-value" style="font-family:'JetBrains Mono'; font-size:22px; font-weight:bold; color:#fff;">@ 0.00</div>
             </div>
 
             <div style="background:#111315; padding:12px; border-radius:12px; margin-bottom:15px; border: 1px solid #222;">
@@ -87,25 +108,25 @@
                     <button id="m-multi" style="grid-column: span 2" class="btn-sel active" onclick="setMode('multi')">MÚLTIPLA</button>
                     <button id="m-build" style="grid-column: span 2" class="btn-sel" onclick="setMode('build')">BUILDER</button>
                 </div>
-                <button onclick="applyCombo()" style="width:100%; background:#25282c; border:1px solid #444; color:white; padding:10px; border-radius:8px; font-weight:800; font-size:10px; cursor:pointer;">APLICAR NO FAIR</button>
+                <button onclick="applyCombo()" style="width:100%; background:#25282c; border:1px solid #444; color:white; padding:10px; border-radius:8px; font-weight:800; font-size:10px; cursor:pointer;">APLICAR NA REFERÊNCIA</button>
             </div>
 
             <div class="selector-row">
-                <button id="k-10" class="btn-sel" onclick="setKelly(10)">1/2</button>
-                <button id="k-20" class="btn-sel active" onclick="setKelly(20)">1/4</button>
-                <button id="k-40" class="btn-sel" onclick="setKelly(40)">1/8</button>
-                <button id="k-80" class="btn-sel" onclick="setKelly(80)">1/10</button>
+                <button id="k-2" class="btn-sel" onclick="setKelly(2)">1/2</button>
+                <button id="k-4" class="btn-sel active" onclick="setKelly(4)">1/4</button>
+                <button id="k-8" class="btn-sel" onclick="setKelly(8)">1/8</button>
+                <button id="k-10" class="btn-sel" onclick="setKelly(10)">1/10</button>
             </div>
 
             <div style="text-align:center; margin:15px 0; padding:15px; background:#000; border-radius:12px; border: 1px solid #2d3035;">
                 <div id="stake-res" style="font-family:'JetBrains Mono'; font-size:36px; font-weight:bold; color:var(--dim);">0.00u</div>
                 <div style="display:flex; justify-content: space-between; margin-top:10px; border-top:1px solid #222; padding-top:10px;">
                     <div style="text-align:left">
-                        <span class="label">EV ATUAL</span>
+                        <span class="label">LUCRO EXP. (EV)</span>
                         <div id="ev-res" style="font-size:12px; font-weight:800; color:var(--dim);">0.00%</div>
                     </div>
                     <div style="text-align:right">
-                        <span class="label">ENTRAR ATÉ</span>
+                        <span class="label">LIMITE MÍNIMO</span>
                         <div id="limit-res" style="font-size:12px; font-weight:800; color:var(--accent);">@ 0.00</div>
                     </div>
                 </div>
@@ -136,13 +157,13 @@
         <div class="chart-card">
             <div class="stats-row" style="display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin-bottom:15px;">
                 <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
-                    <span class="label">LUCRO</span><div id="stat-pl" style="font-weight:bold;">0.00u</div>
+                    <span class="label">LUCRO TOTAL</span><div id="stat-pl" style="font-weight:bold;">0.00u</div>
                 </div>
                 <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
-                    <span class="label">YIELD</span><div id="stat-roi" style="font-weight:bold;">0.0%</div>
+                    <span class="label">YIELD (ROI)</span><div id="stat-roi" style="font-weight:bold;">0.0%</div>
                 </div>
                 <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
-                    <span class="label">TOTAL</span><div id="stat-count" style="font-weight:bold;">0</div>
+                    <span class="label">Nº TRADES</span><div id="stat-count" style="font-weight:bold;">0</div>
                 </div>
             </div>
             <div style="height:200px;"><canvas id="profitChart"></canvas></div>
@@ -173,16 +194,14 @@
     let currentTarget = 'fair';
     let values = { fair: '', bookie: '', m1: '', m2: '', m3: '' };
     const tabOrder = ['fair', 'bookie', 'm1', 'm2', 'm3'];
-    let kellyFactor = 20, mode = 'multi', historyData = [], myChart = null;
-
-    // --- FUNÇÃO MODO FOCO ---
+    let kellyDivisor = 4, mode = 'multi', historyData = [], myChart = null;
+    
     function toggleNumpad() {
         const pad = document.getElementById('numpad-control');
         pad.classList.toggle('hidden');
         localStorage.setItem('numpadHidden', pad.classList.contains('hidden'));
     }
 
-    // --- TECLADO FÍSICO ---
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Tab') {
             e.preventDefault();
@@ -234,7 +253,7 @@
     }
 
     function setKelly(k) {
-        kellyFactor = k;
+        kellyDivisor = k;
         document.querySelectorAll('[id^="k-"]').forEach(b => b.classList.remove('active'));
         document.getElementById('k-'+k).classList.add('active');
         calculate();
@@ -250,27 +269,44 @@
     }
 
     function calculate() {
-        const f = parseFloat(values.fair), b = parseFloat(values.bookie);
+        const refOdd = parseFloat(values.fair);
+        const evalOdd = parseFloat(values.bookie);
+        const fairDisplay = document.getElementById('calc-fair-value');
         const resEl = document.getElementById('stake-res');
         const evEl = document.getElementById('ev-res');
         const limEl = document.getElementById('limit-res');
         
-        if(f > 1) {
-            limEl.innerText = `@ ${f.toFixed(2)}`;
-            if(b > 1) {
-                const ev = (b/f)*100;
+        if(refOdd > 1) {
+            // Lógica Solicitada: Adicionar margem de 3% sobre a referência
+            const calculatedFair = refOdd * 1.03;
+            fairDisplay.innerText = `@ ${calculatedFair.toFixed(2)}`;
+            limEl.innerText = `@ ${calculatedFair.toFixed(2)}`;
+            
+            if(evalOdd > 1) {
+                // EV baseado na odd avaliada vs a justa calculada
+                const ev = (evalOdd / calculatedFair) * 100; 
                 evEl.innerText = `${ev.toFixed(2)}%`;
-                if(ev > 100) {
-                    let edge = (b/f) - 1;
-                    let rawStake = (edge * 100) / (kellyFactor/4);
-                    let roundedStake = Math.round(rawStake * 4) / 4;
-                    if (roundedStake >= 0.25) {
+                
+                if(ev > 100.00) {
+                    const p = 1 / calculatedFair; 
+                    const q = 1 - p; 
+                    const b_net = evalOdd - 1; 
+                    
+                    const fullKelly = (p * b_net - q) / b_net;
+                    let stakeUnits = (fullKelly * 100) / kellyDivisor;
+                    
+                    const MAX_SAFE_STAKE = 10.00;
+                    if (stakeUnits > MAX_SAFE_STAKE) stakeUnits = MAX_SAFE_STAKE;
+
+                    const roundedStake = Math.max(0, Math.round(stakeUnits * 4) / 4);
+                    
+                    if (roundedStake > 0) {
                         resEl.innerText = roundedStake.toFixed(2) + "u";
                         resEl.style.color = "var(--green)";
                         evEl.style.color = "var(--green)";
                     } else {
-                        resEl.innerText = "STAKE MIN";
-                        resEl.style.color = "var(--red)";
+                        resEl.innerText = "VALOR BAIXO";
+                        resEl.style.color = "var(--gold)";
                         evEl.style.color = "var(--gold)";
                     }
                 } else {
@@ -282,6 +318,7 @@
                 resEl.innerText = "0.00u"; evEl.innerText = "0.00%"; evEl.style.color = "var(--dim)";
             }
         } else {
+            fairDisplay.innerText = "@ 0.00";
             resEl.innerText = "0.00u"; limEl.innerText = "@ 0.00"; evEl.innerText = "0.00%"; resEl.style.color = "var(--dim)";
         }
     }
@@ -360,7 +397,6 @@
         });
     }
 
-    // CARREGA PREFERÊNCIA DO TECLADO AO ABRIR
     window.addEventListener('DOMContentLoaded', () => {
         if (localStorage.getItem('numpadHidden') === 'true') {
             document.getElementById('numpad-control').classList.add('hidden');
