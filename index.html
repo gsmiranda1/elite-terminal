@@ -79,7 +79,7 @@
             
             <button id="btn-novig" class="btn-novig">
                 <span>GATILHO DE STAKE (MERCADO ABERTO)</span>
-                <span id="novig-status">VIG 3% AUTO</span>
+                <span id="novig-status">VIG 3.5% AUTO</span>
             </button>
 
             <div class="display-grid">
@@ -94,7 +94,7 @@
             </div>
 
             <div class="fair-display-box">
-                <span class="label" style="color:var(--accent)">Odd Justa (+3% Margem)</span>
+                <span class="label" style="color:var(--accent)">Odd Justa (+3.5% Margem)</span>
                 <div id="calc-fair-value" style="font-family:'JetBrains Mono'; font-size:22px; font-weight:bold; color:#fff;">@ 0.00</div>
             </div>
 
@@ -277,8 +277,8 @@
         const limEl = document.getElementById('limit-res');
         
         if(refOdd > 1) {
-            // Lógica Solicitada: Adicionar margem de 3% sobre a referência
-            const calculatedFair = refOdd * 1.03;
+            // Lógica Solicitada: Adicionar margem de 3.5% sobre a referência
+            const calculatedFair = refOdd * 1.035;
             fairDisplay.innerText = `@ ${calculatedFair.toFixed(2)}`;
             limEl.innerText = `@ ${calculatedFair.toFixed(2)}`;
             
