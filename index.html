@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite V14.8 - Pinnacle Pro Scanner (Stake Mate Engine)</title>
+    <title>Elite V14.8 - Pinnacle Pro Scanner</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,7 +19,7 @@
             min-height: 100vh; overflow-y: auto; user-select: none;
         }
         .main-wrapper { display: grid; grid-template-columns: 360px 1fr; gap: 20px; width: 100%; max-width: 1150px; }
-        .calc-card, .chart-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #26292c; }
+        .calc-card, .chart-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #26292c; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .display-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
         
         .input-box { background: #111315; border: 2px solid #2d3035; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; }
@@ -46,31 +46,89 @@
         .btn-toggle-pad { width: 100%; background: transparent; border: 1px dashed #333; color: var(--dim); font-size: 8px; padding: 6px; margin-bottom: 12px; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: 800; }
         .btn-toggle-pad:hover { border-color: var(--accent); color: var(--accent); }
 
-        .btn-num { background: #222529; border: 1px solid #333; padding: 18px; border-radius: 10px; color: white; font-family: 'JetBrains Mono'; font-size: 20px; font-weight: bold; cursor: pointer; outline: none; }
-        .btn-bs { background: #352222; color: var(--red); border-color: #522; }
+        .btn-num { background: #222529; border: 1px solid #333; padding: 18px; border-radius: 10px; color: white; font-family: 'JetBrains Mono'; font-size: 20px; font-weight: bold; cursor: pointer; outline: none; transition: 0.1s; }
+        .btn-num:active { background: #333; transform: scale(0.95); }
 
         .selector-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 10px 0; }
-        .btn-sel { background: #111315; border: 1px solid #333; color: var(--dim); font-size: 9px; padding: 10px 2px; border-radius: 6px; cursor: pointer; font-weight: 800; outline: none; }
+        .btn-sel { background: #111315; border: 1px solid #333; color: var(--dim); font-size: 9px; padding: 10px 2px; border-radius: 6px; cursor: pointer; font-weight: 800; outline: none; transition: 0.2s; }
         .btn-sel.active { background: var(--accent) !important; color: #000 !important; }
 
         .tools-row { display: flex; gap: 8px; margin: 15px 0; }
         .btn-tool { flex: 1; background: #111315; border: 1px solid #333; color: var(--dim); padding: 10px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
 
-        .table-container { max-height: 300px; overflow-y: auto; border-radius: 8px; background: #111315; margin-top: 10px; }
+        .table-container { max-height: 250px; overflow-y: auto; border-radius: 8px; background: #111315; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         td { padding: 12px 8px; border-bottom: 1px solid #1a1c1e; font-family: 'JetBrains Mono'; }
+        
         .badge { padding: 5px 8px; border-radius: 4px; font-weight: 800; font-size: 9px; cursor: pointer; text-align: center; min-width: 60px; display: inline-block; }
         .b-wait { background: #222; color: #777; }
         .b-win { background: #1b3d2a; color: var(--green); }
         .b-red { background: #3d1b1b; color: var(--red); }
+        
+        .btn-del { color: #444; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 5px; transition: 0.2s; }
+        .btn-del:hover { color: var(--red); }
+        .btn-share-row { color: var(--dim); background: transparent; border: none; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .btn-share-row:hover { color: var(--accent); }
+
+        .advanced-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #222; }
+        .stat-box { background: #111315; padding: 10px; border-radius: 10px; border: 1px solid #222; text-align: center; position: relative; }
+        .stat-box .val { font-family: 'JetBrains Mono'; font-size: 14px; font-weight: bold; margin-top: 4px; }
+
+        .btn-share-main {
+            width: 100%; background: rgba(157,125,242,0.1); border: 1px solid var(--accent); color: var(--accent);
+            padding: 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer; margin-bottom: 15px;
+            transition: 0.2s; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-share-main:hover { background: var(--accent); color: #000; }
+
+        .share-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8);
+            display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(4px);
+        }
+        .share-modal {
+            background: #16181a; border: 1px solid #333; padding: 25px; border-radius: 20px;
+            width: 280px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        .share-dest { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .btn-dest {
+            padding: 12px; border-radius: 12px; border: 1px solid #333; background: #111315;
+            color: white; font-weight: 800; font-size: 11px; cursor: pointer; transition: 0.2s;
+            text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-dest:hover { background: #222; border-color: var(--accent); }
+        .btn-dest.wa { color: #25d366; }
+        .btn-dest.tg { color: #0088cc; }
 
         #cloud-status { position: fixed; bottom: 10px; right: 10px; font-size: 8px; color: var(--accent); font-weight: bold; }
-        @media (max-width: 850px) { .main-wrapper { grid-template-columns: 1fr; } }
+        @media (max-width: 850px) { .main-wrapper { grid-template-columns: 1fr; } .advanced-stats { grid-template-columns: 1fr 1fr; } }
     </style>
 </head>
 <body>
 
 <div id="cloud-status">SINCRONIZANDO...</div>
+
+<div id="shareOverlay" class="share-overlay" onclick="closeShare()">
+    <div class="share-modal" onclick="event.stopPropagation()">
+        <span id="share-title" class="label" style="color:var(--accent); font-size:10px;">Enviar Para:</span>
+        <div class="share-dest">
+            <button class="btn-dest wa" onclick="sendTo('wa')">🟢 WHATSAPP</button>
+            <button class="btn-dest tg" onclick="sendTo('tg')">🔵 TELEGRAM</button>
+            <button class="btn-dest" onclick="sendTo('copy')">📋 COPIAR TEXTO</button>
+            <button class="btn-dest" style="border-style: dashed; margin-top:10px; opacity:0.6" onclick="closeShare()">CANCELAR</button>
+        </div>
+    </div>
+</div>
+
+<div id="optionsOverlay" class="share-overlay" onclick="this.style.display='none'">
+    <div class="share-modal" onclick="event.stopPropagation()">
+        <span class="label" style="color:var(--accent); font-size:10px;">O que deseja partilhar?</span>
+        <div class="share-dest">
+            <button class="btn-dest" onclick="shareCurrentBet(); document.getElementById('optionsOverlay').style.display='none'">🚀 SINAL ATUAL</button>
+            <button class="btn-dest" onclick="sharePerformanceReport(); document.getElementById('optionsOverlay').style.display='none'">📊 RELATÓRIO DE RESULTADOS</button>
+            <button class="btn-dest" style="border-style: dashed; margin-top:10px; opacity:0.6" onclick="document.getElementById('optionsOverlay').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+</div>
 
 <div class="main-wrapper">
     <div class="calc-col">
@@ -79,7 +137,7 @@
             
             <button id="btn-novig" class="btn-novig">
                 <span>GATILHO DE STAKE (MERCADO ABERTO)</span>
-                <span id="novig-status">VIG 3.5% AUTO</span>
+                <span id="novig-status">VIG 3% AUTO</span>
             </button>
 
             <div class="display-grid">
@@ -94,7 +152,7 @@
             </div>
 
             <div class="fair-display-box">
-                <span class="label" style="color:var(--accent)">Odd Justa (+3.5% Margem)</span>
+                <span class="label" style="color:var(--accent)">Odd Justa (+3% Margem)</span>
                 <div id="calc-fair-value" style="font-family:'JetBrains Mono'; font-size:22px; font-weight:bold; color:#fff;">@ 0.00</div>
             </div>
 
@@ -132,7 +190,9 @@
                 </div>
             </div>
 
-            <button id="btn-add" onclick="addBet()" style="width:100%; background:var(--accent); color:#000; border:none; padding:18px; border-radius:12px; font-weight:800; font-size:14px; margin-bottom:15px; cursor:pointer;">REGISTRAR OPERAÇÃO</button>
+            <button class="btn-share-main" onclick="document.getElementById('optionsOverlay').style.display='flex'">📤 Partilhar Sinal / Resultado</button>
+
+            <button id="btn-add" onclick="addBet()" style="width:100%; background:var(--accent); color:#000; border:none; padding:18px; border-radius:12px; font-weight:800; font-size:14px; margin-bottom:15px; cursor:pointer; transition: 0.2s;">REGISTRAR OPERAÇÃO</button>
 
             <button class="btn-toggle-pad" onclick="toggleNumpad()" tabindex="-1">⌨ Alternar Teclado Visual</button>
 
@@ -148,7 +208,7 @@
                 <button class="btn-num" tabindex="-1" onclick="press('9')">9</button>
                 <button class="btn-num" tabindex="-1" onclick="press('.')">.</button>
                 <button class="btn-num" tabindex="-1" onclick="press('0')">0</button>
-                <button class="btn-num btn-bs" tabindex="-1" onclick="press('DEL')">⌫</button>
+                <button class="btn-num" style="background:#352222; color:var(--red);" tabindex="-1" onclick="press('DEL')">⌫</button>
             </div>
         </div>
     </div>
@@ -163,10 +223,31 @@
                     <span class="label">YIELD (ROI)</span><div id="stat-roi" style="font-weight:bold;">0.0%</div>
                 </div>
                 <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
-                    <span class="label">Nº TRADES</span><div id="stat-count" style="font-weight:bold;">0</div>
+                    <span class="label">TOTAL INVESTIDO</span><div id="stat-invested" style="font-weight:bold;">0.00u</div>
                 </div>
             </div>
+
             <div style="height:200px;"><canvas id="profitChart"></canvas></div>
+
+            <div class="advanced-stats">
+                <div class="stat-box">
+                    <span class="label">HOJE</span>
+                    <div id="stat-today" class="val">0.00u</div>
+                </div>
+                <div class="stat-box">
+                    <span class="label">NA SEMANA</span>
+                    <div id="stat-week" class="val">0.00u</div>
+                </div>
+                <div class="stat-box">
+                    <span class="label">NO MÊS</span>
+                    <div id="stat-month" class="val">0.00u</div>
+                </div>
+                <div class="stat-box">
+                    <span class="label">ESTÁVEL</span>
+                    <div id="stat-count-total" class="val">0 Bets</div>
+                </div>
+            </div>
+
             <div class="tools-row">
                 <button class="btn-tool" onclick="exportData()">Exportar</button>
                 <button class="btn-tool" onclick="document.getElementById('csvIn').click()">Importar</button>
@@ -195,11 +276,151 @@
     let values = { fair: '', bookie: '', m1: '', m2: '', m3: '' };
     const tabOrder = ['fair', 'bookie', 'm1', 'm2', 'm3'];
     let kellyDivisor = 4, mode = 'multi', historyData = [], myChart = null;
-    
+    let textToShare = "";
+
+    function updateChart() {
+        const ctx = document.getElementById('profitChart').getContext('2d');
+        const chartData = [...historyData].reverse();
+        
+        let labels = [];
+        let dataPoints = [];
+        let accum = 0;
+        
+        chartData.forEach((b) => {
+            labels.push(b.date);
+            if (b.status !== 'WAIT') {
+                accum += b.pl;
+            }
+            dataPoints.push(accum);
+        });
+
+        if (myChart) myChart.destroy();
+
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Lucro Acumulado',
+                    data: dataPoints,
+                    borderColor: '#9d7df2',
+                    backgroundColor: 'rgba(157, 125, 242, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { display: false }, grid: { display: false } },
+                    y: { ticks: { color: '#666', font: { size: 10 } }, grid: { color: '#222' } }
+                }
+            }
+        });
+    }
+
+    function sharePerformanceReport() {
+        const plToday = document.getElementById('stat-today').innerText;
+        const plWeek = document.getElementById('stat-week').innerText;
+        const plMonth = document.getElementById('stat-month').innerText;
+        const yieldTotal = document.getElementById('stat-roi').innerText;
+        const totalVolume = document.getElementById('stat-count-total').innerText;
+
+        textToShare = `🏆 *ELITE SCANNER - PERFORMANCE*\n` +
+                      `📅 *RELATÓRIO PARCIAL*\n` +
+                      `━━━━━━━━━━━━━━━\n\n` +
+                      `🗓️ *HOJE:* ${plToday}\n` +
+                      `📅 *SEMANA:* ${plWeek}\n` +
+                      `📈 *MÊS:* ${plMonth}\n` +
+                      `🎯 *YIELD TOTAL:* ${yieldTotal}\n\n` +
+                      `📁 *Volume: ${totalVolume}*\n` +
+                      `━━━━━━━━━━━━━━━\n` +
+                      `_Pinnacle Pro Scanner - Engine V14.8_`;
+
+        document.getElementById('shareOverlay').style.display = 'flex';
+    }
+
+    function shareCurrentBet() {
+        const fairVal = document.getElementById('calc-fair-value').innerText;
+        const evalOdd = values.bookie || '---';
+        const stake = document.getElementById('stake-res').innerText;
+        const ev = document.getElementById('ev-res').innerText;
+
+        if(parseFloat(evalOdd) <= 1) {
+            alert("Insira as Odds primeiro!");
+            return;
+        }
+
+        textToShare = `🔥 *ELITE SCANNER V14.8*\n\n` +
+                      `📊 *Sinal Identificado*\n` +
+                      `━━━━━━━━━━━━━━━\n` +
+                      `🎯 Odd Avaliada: @${evalOdd}\n` +
+                      `⚖️ Odd Justa: ${fairVal}\n` +
+                      `💎 Edge (EV+): ${ev}\n\n` +
+                      `💰 Sugestão: *${stake}*\n` +
+                      `━━━━━━━━━━━━━━━\n` +
+                      `_Pinnacle Pro Scanner (Stake Mate Engine)_`;
+
+        document.getElementById('shareOverlay').style.display = 'flex';
+    }
+
+    function shareHistoryBet(id) {
+        const b = historyData.find(x => x.id == id);
+        if(!b) return;
+
+        let statusEmoji = "📈 ⏳ *Aguardando resultado...*";
+        if(b.status.includes('WIN')) statusEmoji = `📈 ✅ *WIN*`;
+        else if(b.status.includes('RED')) statusEmoji = `📈 ❌ *RED*`;
+        else if(b.status.includes('VOID')) statusEmoji = `📈 ⚪ *REEMBOLSADA*`;
+
+        const refOdd = b.ref ? `@${parseFloat(b.ref).toFixed(2)}` : "---";
+        const justaOdd = b.justa ? `@${parseFloat(b.justa).toFixed(2)}` : "---";
+        const infoPL = b.status !== 'WAIT' ? `\n💸 PL: ${b.pl.toFixed(2)}u` : "";
+
+        textToShare = `📅 Data: ${b.date}\n` +
+                      `━━━━━━━━━━━━━━━\n` +
+                      `🎯 Ref: ${refOdd}\n` +
+                      `⚖️ Justa: ${justaOdd}\n` +
+                      `🏆 Entrada: @${b.odd.toFixed(2)}\n` +
+                      `💰 Stake: ${b.stake.toFixed(2)}u${infoPL}\n` +
+                      `${statusEmoji}`;
+
+        document.getElementById('shareOverlay').style.display = 'flex';
+    }
+
+    function sendTo(dest) {
+        const encoded = encodeURIComponent(textToShare);
+        if (dest === 'wa') {
+            window.open(`https://wa.me/?text=${encoded}`, '_blank');
+        } else if (dest === 'tg') {
+            window.open(`https://t.me/share/url?url=&text=${encoded}`, '_blank');
+        } else if (dest === 'copy') {
+            copyToClipboard(textToShare);
+        }
+        closeShare();
+    }
+
+    function closeShare() {
+        document.getElementById('shareOverlay').style.display = 'none';
+    }
+
+    function copyToClipboard(text) {
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        alert("Copiado para a área de transferência!");
+    }
+
     function toggleNumpad() {
         const pad = document.getElementById('numpad-control');
         pad.classList.toggle('hidden');
-        localStorage.setItem('numpadHidden', pad.classList.contains('hidden'));
     }
 
     window.addEventListener('keydown', (e) => {
@@ -212,7 +433,6 @@
         }
         if (e.key === 'Enter') {
             e.preventDefault();
-            document.activeElement.blur();
             addBet();
             return;
         }
@@ -241,7 +461,7 @@
     db.on('value', snap => {
         const val = snap.val();
         historyData = val ? Object.values(val).reverse() : [];
-        refreshUI();
+        renderStats();
         document.getElementById('cloud-status').innerText = 'NUVEM OK: ' + new Date().toLocaleTimeString();
     });
 
@@ -277,13 +497,11 @@
         const limEl = document.getElementById('limit-res');
         
         if(refOdd > 1) {
-            // Lógica Solicitada: Adicionar margem de 3.5% sobre a referência
-            const calculatedFair = refOdd * 1.035;
+            const calculatedFair = refOdd * 1.03;
             fairDisplay.innerText = `@ ${calculatedFair.toFixed(2)}`;
             limEl.innerText = `@ ${calculatedFair.toFixed(2)}`;
             
             if(evalOdd > 1) {
-                // EV baseado na odd avaliada vs a justa calculada
                 const ev = (evalOdd / calculatedFair) * 100; 
                 evEl.innerText = `${ev.toFixed(2)}%`;
                 
@@ -297,7 +515,6 @@
                     
                     const MAX_SAFE_STAKE = 10.00;
                     if (stakeUnits > MAX_SAFE_STAKE) stakeUnits = MAX_SAFE_STAKE;
-
                     const roundedStake = Math.max(0, Math.round(stakeUnits * 4) / 4);
                     
                     if (roundedStake > 0) {
@@ -329,18 +546,32 @@
             if(d) d.innerText = values[k] || (k.startsWith('m') ? '1.00' : '---');
         });
         calculate();
-        renderStats();
     }
 
     function addBet() {
         const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
-        if(!b || isNaN(s)) return;
+        if(!b || isNaN(s) || s <= 0) return;
+        
+        const ref = parseFloat(values.fair) || 0;
+        const justa = ref > 1 ? (ref * 1.035).toFixed(2) : 0;
+        
         const id = Date.now().toString();
-        db.child(id).set({ id, odd: b, stake: s, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString() });
+        db.child(id).set({ 
+            id, odd: b, stake: s, ref: ref, justa: justa, 
+            status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() 
+        });
+        
+        values.fair = ''; values.bookie = '';
+        refreshUI();
+    }
+
+    function deleteBet(id) {
+        if(confirm("Excluir esta operação?")) db.child(id).remove();
     }
 
     function updateStatus(id) {
         const b = historyData.find(x => x.id == id);
+        if(!b) return;
         const st = ['WAIT', 'WIN', '1/2 WIN', 'VOID', '1/2 RED', 'RED'];
         b.status = st[(st.indexOf(b.status)+1)%st.length];
         if(b.status==='WIN') b.pl = (b.odd-1)*b.stake;
@@ -351,57 +582,55 @@
         db.child(id).update(b);
     }
 
-    function clearAll() { if(confirm("APAGAR TUDO?")) db.set(null); }
-
-    function exportData() {
-        let csv = "Data,Odd,Stake,Status,PL\n";
-        historyData.forEach(b => csv += `${b.date},${b.odd},${b.stake},${b.status},${b.pl}\n`);
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-        a.download = 'elite_history.csv'; a.click();
-    }
-
-    function importData(input) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            const rows = reader.result.split('\n').slice(1);
-            rows.forEach(r => {
-                const [date, odd, stake, status, pl] = r.split(',');
-                if(odd) {
-                    const id = Date.now().toString() + Math.random();
-                    db.child(id).set({ id, date, odd:parseFloat(odd), stake:parseFloat(stake), status, pl:parseFloat(pl) });
-                }
-            });
-        };
-        reader.readAsText(input.files[0]);
-    }
-
     function renderStats() {
         const tb = document.getElementById('history-table'); if(!tb) return;
         tb.innerHTML = '';
-        let totalPL = 0, invest = 0, cData = [], accum = 0;
-        [...historyData].reverse().forEach(b => { if(b.status!=='WAIT'){ accum += b.pl; cData.push(accum); } });
+        
+        let totalPL = 0, invest = 0;
+        let todayPL = 0, weekPL = 0, monthPL = 0;
+        const agora = Date.now();
+        const hojeStr = new Date().toLocaleDateString();
+
         historyData.forEach(b => {
-            totalPL += b.pl; if(b.status!=='WAIT') invest += b.stake;
+            totalPL += b.pl; 
+            if(b.status!=='WAIT') invest += b.stake;
+
+            const diffDays = (agora - b.timestamp) / (1000 * 60 * 60 * 24);
+            
+            if(b.date === hojeStr) todayPL += b.pl;
+            if(diffDays <= 7) weekPL += b.pl;
+            if(diffDays <= 30) monthPL += b.pl;
+
             let cls = b.status.includes('WIN')?'b-win':b.status.includes('RED')?'b-red':'b-wait';
-            tb.innerHTML += `<tr><td>${b.date}</td><td>@${b.odd.toFixed(2)}</td><td>${b.stake.toFixed(2)}u</td><td style="color:${b.pl>=0?'var(--green)':'var(--red)'}">${b.pl.toFixed(2)}</td><td style="text-align:right"><span class="badge ${cls}" onclick="updateStatus('${b.id}')">${b.status}</span></td></tr>`;
+            
+            tb.innerHTML += `<tr>
+                <td style="width:25px"><button class="btn-share-row" onclick="shareHistoryBet('${b.id}')">📲</button></td>
+                <td>${b.date}</td>
+                <td>@${b.odd.toFixed(2)}</td>
+                <td>${b.stake.toFixed(2)}u</td>
+                <td style="color:${b.pl>=0?'var(--green)':'var(--red)'}">${b.pl.toFixed(2)}</td>
+                <td style="text-align:right"><span class="badge ${cls}" onclick="updateStatus('${b.id}')">${b.status}</span></td>
+                <td style="width:25px; text-align:right"><button class="btn-del" onclick="deleteBet('${b.id}')">×</button></td>
+            </tr>`;
         });
+
         document.getElementById('stat-pl').innerText = totalPL.toFixed(2)+'u';
         document.getElementById('stat-pl').style.color = totalPL>=0?'var(--green)':'var(--red)';
         document.getElementById('stat-roi').innerText = (invest>0?(totalPL/invest*100):0).toFixed(1)+'%';
-        document.getElementById('stat-count').innerText = historyData.length;
-        if(myChart) myChart.destroy();
-        myChart = new Chart(document.getElementById('profitChart'), { 
-            type: 'line', data: { labels: cData.map((_,i)=>i+1), datasets: [{ data: cData, borderColor: '#9d7df2', borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: 'rgba(157,125,242,0.05)', tension: 0.2 }] }, 
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#222' } } } } 
-        });
+        document.getElementById('stat-invested').innerText = invest.toFixed(2)+'u';
+        document.getElementById('stat-count-total').innerText = historyData.length + ' Bets';
+
+        document.getElementById('stat-today').innerText = todayPL.toFixed(2)+'u';
+        document.getElementById('stat-today').style.color = todayPL>=0?'var(--green)':'var(--red)';
+        document.getElementById('stat-week').innerText = weekPL.toFixed(2)+'u';
+        document.getElementById('stat-week').style.color = weekPL>=0?'var(--green)':'var(--red)';
+        document.getElementById('stat-month').innerText = monthPL.toFixed(2)+'u';
+        document.getElementById('stat-month').style.color = monthPL>=0?'var(--green)':'var(--red)';
+
+        updateChart();
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-        if (localStorage.getItem('numpadHidden') === 'true') {
-            document.getElementById('numpad-control').classList.add('hidden');
-        }
-    });
+    function clearAll() { if(confirm("APAGAR TUDO?")) db.set(null); }
 </script>
 </body>
 </html>
