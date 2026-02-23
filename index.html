@@ -89,6 +89,7 @@
         .b-wait { background: #222; color: #777; }
         .b-win { background: #1b3d2a; color: var(--green); }
         .b-red { background: #3d1b1b; color: var(--red); }
+        .b-void { background: #1a1c1e; color: #888; border: 1px solid #333; }
         
         .btn-del { color: #444; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 5px; }
         .btn-share-row { color: var(--dim); background: transparent; border: none; cursor: pointer; font-size: 14px; }
@@ -179,11 +180,11 @@
             <div class="display-grid">
                 <div id="box-fair" class="input-box active" onclick="setTarget('fair')">
                     <span class="label">ODD DE REFERÊNCIA</span>
-                    <input type="number" step="0.01" id="val-fair" class="num-field" placeholder="---" oninput="updateVal('fair', this.value)">
+                    <input type="number" step="0.01" inputmode="decimal" id="val-fair" class="num-field" placeholder="---" oninput="updateVal('fair', this.value)">
                 </div>
                 <div id="box-bookie" class="input-box" onclick="setTarget('bookie')">
                     <span class="label">ODD AVALIADA</span>
-                    <input type="number" step="0.01" id="val-bookie" class="num-field" placeholder="---" oninput="updateVal('bookie', this.value)">
+                    <input type="number" step="0.01" inputmode="decimal" id="val-bookie" class="num-field" placeholder="---" oninput="updateVal('bookie', this.value)">
                 </div>
             </div>
 
@@ -194,9 +195,9 @@
 
             <div style="background:#111315; padding:12px; border-radius:12px; margin-bottom:15px; border: 1px solid #222;">
                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-                    <div id="box-m1" class="input-box" onclick="setTarget('m1')"><span class="label">M1</span><input type="number" step="0.01" id="val-m1" class="num-field" style="font-size:14px;" value="1.00" oninput="updateVal('m1', this.value)"></div>
-                    <div id="box-m2" class="input-box" onclick="setTarget('m2')"><span class="label">M2</span><input type="number" step="0.01" id="val-m2" class="num-field" style="font-size:14px;" value="1.00" oninput="updateVal('m2', this.value)"></div>
-                    <div id="box-m3" class="input-box" onclick="setTarget('m3')"><span class="label">M3</span><input type="number" step="0.01" id="val-m3" class="num-field" style="font-size:14px;" value="1.00" oninput="updateVal('m3', this.value)"></div>
+                    <div id="box-m1" class="input-box" onclick="setTarget('m1')"><span class="label">M1</span><input type="number" step="0.01" inputmode="decimal" id="val-m1" class="num-field" style="font-size:14px;" value="1.00" oninput="updateVal('m1', this.value)"></div>
+                    <div id="box-m2" class="input-box" onclick="setTarget('m2')"><span class="label">M2</span><input type="number" step="0.01" inputmode="decimal" id="val-m2" class="num-field" style="font-size:14px;" value="1.00" oninput="updateVal('m2', this.value)"></div>
+                    <div id="box-m3" class="input-box" onclick="setTarget('m3')"><span class="label">M3</span><input type="number" step="0.01" inputmode="decimal" id="val-m3" class="num-field" style="font-size:14px;" value="1.00" oninput="updateVal('m3', this.value)"></div>
                 </div>
                 <div class="selector-row">
                     <button id="m-multi" style="grid-column: span 2" class="btn-sel active" onclick="setMode('multi')">MÚLTIPLA</button>
@@ -284,7 +285,6 @@
 </div>
 
 <script>
-    // Configurações Firebase do usuário
     const firebaseConfig = {
         apiKey: "AIzaSyA7trGWz9RnvuKrK2MULn6YYlu86dBJFdU",
         authDomain: "eliteterminal-2e66e.firebaseapp.com",
@@ -322,16 +322,44 @@
         });
     }
 
+    // A SOLUÇÃO CENTRAL DO CLICOU-LIMPOU E DO TAB
     document.addEventListener("DOMContentLoaded", function() {
         enableDragScroll('bookie-slider');
         enableDragScroll('table-scroll-container');
+        
+        // Clicou-Limpou para Campos Numéricos (Odds/Múltiplas)
         document.querySelectorAll('.num-field').forEach(input => {
-            input.addEventListener('focus', () => {
-                const target = input.id.replace('val-', '');
-                setTarget(target);
+            input.addEventListener('focus', function() {
+                let t = this.id.replace('val-', '');
+                currentTarget = t;
+                
+                // Atualiza o Visual (Borda Roxa) ao andar com o TAB
+                document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active'));
+                let box = document.getElementById('box-'+t);
+                if(box) box.classList.add('active');
+                
+                // Limpa o valor para nova digitação
+                this.value = '';
+                values[t] = '';
+                calculate();
+            });
+        });
+
+        // Clicou-Limpou para Campos de Texto (Evento/Mercado)
+        document.querySelectorAll('.text-input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.value = '';
             });
         });
     });
+
+    // Função que aciona o Input ao clicar na caixa Div (Otimizada para não quebrar o TAB)
+    function setTarget(t) {
+        let input = document.getElementById('val-'+t);
+        if (input) {
+            input.focus(); // O .focus() aciona a regra ali em cima que faz o "Clicou Limpou"
+        }
+    }
 
     function setBookie(name, el) {
         activeBookie = name;
@@ -341,13 +369,10 @@
         el.classList.add('active'); el.style.borderColor = el.getAttribute('data-color'); el.style.color = '#fff';
     }
 
-    function setTarget(t) {
-        currentTarget = t;
-        document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active'));
-        document.getElementById('box-'+t).classList.add('active');
+    function updateVal(key, val) { 
+        values[key] = val; 
+        calculate(); 
     }
-
-    function updateVal(key, val) { values[key] = val; calculate(); }
 
     function press(key) {
         let input = document.getElementById('val-' + currentTarget);
@@ -391,10 +416,8 @@
         values.fair = res.toFixed(2);
         document.getElementById('val-fair').value = values.fair;
         calculate(); setTarget('bookie');
-        document.getElementById('val-bookie').focus();
     }
 
-    // CLICOU REGISTROU, LIMPA TUDO (RESTAURADO)
     function addBet() {
         const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
         if(!b || isNaN(s) || s <= 0) return;
@@ -405,10 +428,11 @@
         
         db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: evt, mercado: mkt, bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
         
-        // Limpeza dos campos pós-registro
+        // Limpa tudo após registrar
         values = { fair: '', bookie: '', m1: '1.00', m2: '1.00', m3: '1.00' };
         ['fair','bookie','m1','m2','m3'].forEach(k => { 
-            document.getElementById('val-'+k).value = (k.startsWith('m')?'1.00':''); 
+            let el = document.getElementById('val-'+k);
+            if(el) el.value = (k.startsWith('m')?'1.00':''); 
         });
         document.getElementById('input-evento').value = ''; 
         document.getElementById('input-mercado').value = '';
@@ -433,19 +457,23 @@
         
         historyData.forEach(b => {
             totalPL += b.pl; 
-            if(b.status!=='WAIT') invest += b.stake;
+            if(b.status!=='WAIT' && b.status!=='VOID') invest += b.stake;
             const diffDays = (now - b.timestamp) / (1000 * 60 * 60 * 24);
             if(diffDays <= 1) todayPL += b.pl;
             if(diffDays <= 7) weekPL += b.pl;
             if(diffDays <= 30) monthPL += b.pl;
 
-            let cls = b.status.includes('WIN')?'b-win':b.status.includes('RED')?'b-red':'b-wait';
+            let cls = 'b-wait';
+            if(b.status.includes('WIN')) cls = 'b-win';
+            else if(b.status.includes('RED')) cls = 'b-red';
+            else if(b.status === 'VOID') cls = 'b-void';
+
             tb.innerHTML += `<tr>
                 <td style="width:25px"><button class="btn-share-row" onclick="shareHistoryBet('${b.id}')">📲</button></td>
                 <td>
                     <div style="color:var(--accent); font-size:9px; font-weight:800;">[${b.bookie}]</div>
-                    <div style="color:white; font-weight:bold; font-size:11px;">${b.evento}</div>
-                    <div style="color:var(--gold); font-size:10px; font-weight:800; margin-top:2px;">${b.mercado}</div>
+                    <div style="color:white; font-weight:bold; font-size:11px;">${b.evento || b.date}</div>
+                    <div style="color:var(--gold); font-size:10px; font-weight:800; margin-top:2px;">${b.mercado || 'MERCADO EM ABERTO'}</div>
                 </td>
                 <td style="text-align:center">@${b.odd.toFixed(2)}</td>
                 <td style="text-align:center">${b.stake.toFixed(2)}u</td>
@@ -485,7 +513,7 @@
             if(!houses[b.bookie]) houses[b.bookie] = {pl: 0, inv: 0, count: 0};
             houses[b.bookie].pl += b.pl;
             houses[b.bookie].count++;
-            if(b.status!=='WAIT') houses[b.bookie].inv += b.stake;
+            if(b.status!=='WAIT' && b.status!=='VOID') houses[b.bookie].inv += b.stake;
         });
         let msg = "📂 *RESUMO POR CASAS - ELITE*\n\n";
         for(let h in houses) {
@@ -534,7 +562,6 @@
     function clearAll() { if(confirm("LIMPAR TODO O HISTÓRICO?")) db.set(null); }
     function closeShare() { document.getElementById('shareOverlay').style.display = 'none'; }
     
-    // STATUS COM MEIO GREEN/RED (RESTAURADO)
     function updateStatus(id) {
         const b = historyData.find(x => x.id == id);
         const st = ['WAIT', 'WIN', '1/2 WIN', 'VOID', '1/2 RED', 'RED'];
