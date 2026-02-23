@@ -30,9 +30,7 @@
         }
         .text-input:focus { border-color: var(--accent); background: #16181a; box-shadow: 0 0 10px rgba(157,125,242,0.1); }
 
-        /* Remove setas dos inputs de número */
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
 
         .num-field { 
@@ -40,11 +38,7 @@
             font-size: 19px; font-weight: bold; width: 100%; text-align: center; outline: none;
         }
 
-        .bookie-selector { 
-            display: flex; gap: 6px; margin-bottom: 15px; overflow-x: auto; scrollbar-width: none; 
-            cursor: grab;
-        }
-        .bookie-selector:active { cursor: grabbing; }
+        .bookie-selector { display: flex; gap: 6px; margin-bottom: 15px; overflow-x: auto; scrollbar-width: none; cursor: grab; }
         .bookie-selector::-webkit-scrollbar { display: none; }
         
         .btn-bookie {
@@ -54,7 +48,6 @@
         }
         .btn-bookie.active { color: #fff; background: #1a1c20; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
-        /* CORREÇÃO DO TAB: Focus-within faz o card brilhar quando o input interno é focado */
         .input-box { background: #111315; border: 2px solid #2d3035; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; }
         .input-box.active, .input-box:focus-within { border-color: var(--accent) !important; background: #1e1b26 !important; box-shadow: 0 0 15px rgba(157,125,242,0.1); }
         
@@ -76,7 +69,6 @@
         .numpad.visible { display: grid; }
         
         .btn-toggle-pad { width: 100%; background: transparent; border: 1px dashed #333; color: var(--dim); font-size: 8px; padding: 6px; margin-bottom: 12px; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: 800; }
-
         .btn-num { background: #222529; border: 1px solid #333; padding: 18px; border-radius: 10px; color: white; font-family: 'JetBrains Mono'; font-size: 20px; font-weight: bold; cursor: pointer; outline: none; transition: 0.1s; }
 
         .selector-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 10px 0; }
@@ -90,11 +82,10 @@
             max-height: 400px; overflow-x: auto; overflow-y: auto; border-radius: 8px; 
             background: #111315; margin-top: 10px; cursor: grab;
         }
-        .table-container:active { cursor: grabbing; }
         table { width: 100%; min-width: 650px; border-collapse: collapse; font-size: 11px; }
         td { padding: 12px 8px; border-bottom: 1px solid #1a1c1e; font-family: 'JetBrains Mono'; white-space: nowrap; vertical-align: middle; }
         
-        .badge { padding: 5px 8px; border-radius: 4px; font-weight: 800; font-size: 9px; cursor: pointer; text-align: center; min-width: 60px; display: inline-block; }
+        .badge { padding: 5px 8px; border-radius: 4px; font-weight: 800; font-size: 9px; cursor: pointer; text-align: center; min-width: 65px; display: inline-block; }
         .b-wait { background: #222; color: #777; }
         .b-win { background: #1b3d2a; color: var(--green); }
         .b-red { background: #3d1b1b; color: var(--red); }
@@ -134,6 +125,18 @@
 
 <div id="cloud-status">SINCRONIZANDO...</div>
 
+<div id="optionsOverlay" class="share-overlay" onclick="this.style.display='none'">
+    <div class="share-modal" onclick="event.stopPropagation()">
+        <span class="label" style="color:var(--accent); font-size:10px;">O que deseja partilhar?</span>
+        <div class="share-dest">
+            <button class="btn-dest" onclick="shareCurrentBet(); document.getElementById('optionsOverlay').style.display='none'">🚀 SINAL ATUAL</button>
+            <button class="btn-dest" onclick="sharePerformanceReport(); document.getElementById('optionsOverlay').style.display='none'">📊 RELATÓRIO GERAL</button>
+            <button class="btn-dest" onclick="shareAllHousesReport(); document.getElementById('optionsOverlay').style.display='none'">🏠 RESUMO POR CASAS</button>
+            <button class="btn-dest" style="border-style: dashed; margin-top:10px; opacity:0.6" onclick="document.getElementById('optionsOverlay').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+</div>
+
 <div id="shareOverlay" class="share-overlay" onclick="closeShare()">
     <div class="share-modal" onclick="event.stopPropagation()">
         <span class="label" style="color:var(--accent); font-size:10px;">Enviar Para:</span>
@@ -142,17 +145,6 @@
             <button class="btn-dest" onclick="sendTo('tg')" style="color:#0088cc">🔵 TELEGRAM</button>
             <button class="btn-dest" onclick="sendTo('copy')">📋 COPIAR TEXTO</button>
             <button class="btn-dest" style="border-style: dashed; margin-top:10px; opacity:0.6" onclick="closeShare()">CANCELAR</button>
-        </div>
-    </div>
-</div>
-
-<div id="optionsOverlay" class="share-overlay" onclick="this.style.display='none'">
-    <div class="share-modal" onclick="event.stopPropagation()">
-        <span class="label" style="color:var(--accent); font-size:10px;">O que deseja partilhar?</span>
-        <div class="share-dest">
-            <button class="btn-dest" onclick="shareCurrentBet(); document.getElementById('optionsOverlay').style.display='none'">🚀 SINAL ATUAL</button>
-            <button class="btn-dest" onclick="sharePerformanceReport(); document.getElementById('optionsOverlay').style.display='none'">📊 RELATÓRIO DE RESULTADOS</button>
-            <button class="btn-dest" style="border-style: dashed; margin-top:10px; opacity:0.6" onclick="document.getElementById('optionsOverlay').style.display='none'">CANCELAR</button>
         </div>
     </div>
 </div>
@@ -174,7 +166,7 @@
                 <div class="btn-bookie" data-color="#ffb80b" onclick="setBookie('Betfair', this)">BETFAIR</div>
                 <div class="btn-bookie" data-color="#df2027" onclick="setBookie('Superbet', this)">SUPERBET</div>
                 <div class="btn-bookie" data-color="#0055ff" onclick="setBookie('Novibet', this)">NOVIBET</div>
-                <div class="btn-bookie active" data-color="#0a5c0a" onclick="setBookie('Pagolbet', this)">PAGOLBET</div>
+                <div class="btn-bookie" data-color="#0a5c0a" onclick="setBookie('Pagolbet', this)">PAGOLBET</div>
                 <div class="btn-bookie" data-color="#8e44ad" onclick="setBookie('Pinnacle', this)">PINNACLE</div>
             </div>
 
@@ -332,8 +324,6 @@
     document.addEventListener("DOMContentLoaded", function() {
         enableDragScroll('bookie-slider');
         enableDragScroll('table-scroll-container');
-        
-        // CORREÇÃO TAB: Sincroniza o alvo quando focado pelo teclado
         document.querySelectorAll('.num-field').forEach(input => {
             input.addEventListener('focus', () => {
                 const target = input.id.replace('val-', '');
@@ -403,24 +393,32 @@
         document.getElementById('val-bookie').focus();
     }
 
+    // CLICOU REGISTROU, LIMPA TUDO (RESTAURADO)
     function addBet() {
         const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
         if(!b || isNaN(s) || s <= 0) return;
+        
         const evt = document.getElementById('input-evento').value.toUpperCase() || 'EVENTO';
         const mkt = document.getElementById('input-mercado').value.toUpperCase() || 'MERCADO';
         const id = Date.now().toString();
+        
         db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: evt, mercado: mkt, bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
-        ['fair','bookie','m1','m2','m3'].forEach(k => { values[k] = (k.startsWith('m')?'1.00':''); document.getElementById('val-'+k).value = values[k]; });
-        document.getElementById('input-evento').value = ''; document.getElementById('input-mercado').value = '';
+        
+        // Limpeza dos campos pós-registro
+        values = { fair: '', bookie: '', m1: '1.00', m2: '1.00', m3: '1.00' };
+        ['fair','bookie','m1','m2','m3'].forEach(k => { 
+            document.getElementById('val-'+k).value = (k.startsWith('m')?'1.00':''); 
+        });
+        document.getElementById('input-evento').value = ''; 
+        document.getElementById('input-mercado').value = '';
+        
         calculate();
+        setTarget('fair');
     }
 
     db.on('value', snap => {
-        // CORREÇÃO BANCO: Muda status ao conectar
         const statusEl = document.getElementById('cloud-status');
-        statusEl.innerText = "NUVEM ATIVA";
-        statusEl.style.color = "var(--green)";
-        
+        statusEl.innerText = "NUVEM ATIVA"; statusEl.style.color = "var(--green)";
         const val = snap.val();
         historyData = val ? Object.values(val).sort((a,b) => b.timestamp - a.timestamp) : [];
         renderStats();
@@ -435,7 +433,6 @@
         historyData.forEach(b => {
             totalPL += b.pl; 
             if(b.status!=='WAIT') invest += b.stake;
-
             const diffDays = (now - b.timestamp) / (1000 * 60 * 60 * 24);
             if(diffDays <= 1) todayPL += b.pl;
             if(diffDays <= 7) weekPL += b.pl;
@@ -480,17 +477,23 @@
         });
     }
 
-    function exportData() {
-        if(historyData.length === 0) return;
-        let csv = "Data,Evento,Mercado,Casa,Odd,Stake,PL,Status\n";
+    function shareAllHousesReport() {
+        if(historyData.length === 0) return alert("Sem dados.");
+        let houses = {};
         historyData.forEach(b => {
-            csv += `${b.date},${b.evento},${b.mercado},${b.bookie},${b.odd},${b.stake},${b.pl},${b.status}\n`;
+            if(!houses[b.bookie]) houses[b.bookie] = {pl: 0, inv: 0, count: 0};
+            houses[b.bookie].pl += b.pl;
+            houses[b.bookie].count++;
+            if(b.status!=='WAIT') houses[b.bookie].inv += b.stake;
         });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('hidden', ''); a.setAttribute('href', url); a.setAttribute('download', 'historico_elite.csv');
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        let msg = "📂 *RESUMO POR CASAS - ELITE*\n\n";
+        for(let h in houses) {
+            let yield = houses[h].inv > 0 ? (houses[h].pl/houses[h].inv*100).toFixed(1) : "0.0";
+            let emoji = houses[h].pl >= 0 ? "✅" : "❌";
+            msg += `${emoji} *${h.toUpperCase()}*\n• Lucro: ${houses[h].pl.toFixed(2)}u\n• Yield: ${yield}%\n• Total: ${houses[h].count} bets\n\n`;
+        }
+        textToShare = msg + "_Gerado por Elite V14.8_";
+        document.getElementById('shareOverlay').style.display = 'flex';
     }
 
     function shareCurrentBet() {
@@ -529,16 +532,33 @@
     function deleteBet(id) { if(confirm("Excluir registro?")) db.child(id).remove(); }
     function clearAll() { if(confirm("LIMPAR TODO O HISTÓRICO?")) db.set(null); }
     function closeShare() { document.getElementById('shareOverlay').style.display = 'none'; }
+    
+    // STATUS COM MEIO GREEN/RED (RESTAURADO)
     function updateStatus(id) {
         const b = historyData.find(x => x.id == id);
         const st = ['WAIT', 'WIN', '1/2 WIN', 'VOID', '1/2 RED', 'RED'];
         b.status = st[(st.indexOf(b.status)+1)%st.length];
+        
         if(b.status==='WIN') b.pl = (b.odd-1)*b.stake;
         else if(b.status==='1/2 WIN') b.pl = ((b.odd-1)*b.stake)/2;
         else if(b.status==='RED') b.pl = -b.stake;
         else if(b.status==='1/2 RED') b.pl = -b.stake/2;
         else b.pl = 0;
+        
         db.child(id).update(b);
+    }
+
+    function exportData() {
+        if(historyData.length === 0) return;
+        let csv = "Data,Evento,Mercado,Casa,Odd,Stake,PL,Status\n";
+        historyData.forEach(b => {
+            csv += `${b.date},${b.evento},${b.mercado},${b.bookie},${b.odd},${b.stake},${b.pl},${b.status}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', ''); a.setAttribute('href', url); a.setAttribute('download', 'historico_elite.csv');
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
 </script>
 </body>
