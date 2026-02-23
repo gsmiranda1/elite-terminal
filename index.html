@@ -16,17 +16,49 @@
         body { 
             font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); 
             margin: 0; padding: 15px; display: flex; justify-content: center;
-            min-height: 100vh; overflow-y: auto; user-select: none;
+            min-height: 100vh; overflow-y: auto;
         }
         .main-wrapper { display: grid; grid-template-columns: 360px 1fr; gap: 20px; width: 100%; max-width: 1150px; }
         .calc-card, .chart-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #26292c; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .display-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
         
+        .input-text-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .text-input { 
+            background: #111315; border: 1px solid #2d3035; padding: 12px; border-radius: 8px; 
+            color: white; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 800; 
+            text-transform: uppercase; outline: none; transition: 0.2s; width: 100%; box-sizing: border-box;
+        }
+        .text-input:focus { border-color: var(--accent); background: #16181a; box-shadow: 0 0 10px rgba(157,125,242,0.1); }
+
+        /* Remove setas dos inputs de número */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .num-field { 
+            background: transparent; border: none; color: white; font-family: 'JetBrains Mono'; 
+            font-size: 19px; font-weight: bold; width: 100%; text-align: center; outline: none;
+        }
+
+        .bookie-selector { 
+            display: flex; gap: 6px; margin-bottom: 15px; overflow-x: auto; scrollbar-width: none; 
+            cursor: grab;
+        }
+        .bookie-selector:active { cursor: grabbing; }
+        .bookie-selector::-webkit-scrollbar { display: none; }
+        
+        .btn-bookie {
+            flex: 0 0 auto; min-width: 80px; padding: 10px 4px; border-radius: 8px; border: 1px solid #2d3035; 
+            background: #111315; color: var(--dim); font-size: 9px; font-weight: 800; 
+            cursor: pointer; text-transform: uppercase; transition: 0.2s; text-align: center;
+        }
+        .btn-bookie.active { color: #fff; background: #1a1c20; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        /* CORREÇÃO DO TAB: Focus-within faz o card brilhar quando o input interno é focado */
         .input-box { background: #111315; border: 2px solid #2d3035; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; }
-        .input-box.active { border-color: var(--accent) !important; background: #1e1b26 !important; box-shadow: 0 0 15px rgba(157,125,242,0.1); }
+        .input-box.active, .input-box:focus-within { border-color: var(--accent) !important; background: #1e1b26 !important; box-shadow: 0 0 15px rgba(157,125,242,0.1); }
         
         .label { font-size: 8px; color: var(--dim); font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; text-transform: uppercase; pointer-events: none; }
-        .val-display { font-family: 'JetBrains Mono'; font-size: 19px; font-weight: bold; color: #fff; min-height: 24px; pointer-events: none; }
         
         .fair-display-box { 
             background: rgba(157,125,242,0.05); border: 1px dashed var(--accent); 
@@ -40,14 +72,12 @@
             background: rgba(157,125,242,0.1); color: var(--accent); border-color: var(--accent);
         }
 
-        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; transition: all 0.3s ease; }
-        .numpad.hidden { display: none; }
+        .numpad { display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+        .numpad.visible { display: grid; }
         
         .btn-toggle-pad { width: 100%; background: transparent; border: 1px dashed #333; color: var(--dim); font-size: 8px; padding: 6px; margin-bottom: 12px; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: 800; }
-        .btn-toggle-pad:hover { border-color: var(--accent); color: var(--accent); }
 
         .btn-num { background: #222529; border: 1px solid #333; padding: 18px; border-radius: 10px; color: white; font-family: 'JetBrains Mono'; font-size: 20px; font-weight: bold; cursor: pointer; outline: none; transition: 0.1s; }
-        .btn-num:active { background: #333; transform: scale(0.95); }
 
         .selector-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 10px 0; }
         .btn-sel { background: #111315; border: 1px solid #333; color: var(--dim); font-size: 9px; padding: 10px 2px; border-radius: 6px; cursor: pointer; font-weight: 800; outline: none; transition: 0.2s; }
@@ -56,30 +86,31 @@
         .tools-row { display: flex; gap: 8px; margin: 15px 0; }
         .btn-tool { flex: 1; background: #111315; border: 1px solid #333; color: var(--dim); padding: 10px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
 
-        .table-container { max-height: 250px; overflow-y: auto; border-radius: 8px; background: #111315; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        td { padding: 12px 8px; border-bottom: 1px solid #1a1c1e; font-family: 'JetBrains Mono'; }
+        .table-container { 
+            max-height: 400px; overflow-x: auto; overflow-y: auto; border-radius: 8px; 
+            background: #111315; margin-top: 10px; cursor: grab;
+        }
+        .table-container:active { cursor: grabbing; }
+        table { width: 100%; min-width: 650px; border-collapse: collapse; font-size: 11px; }
+        td { padding: 12px 8px; border-bottom: 1px solid #1a1c1e; font-family: 'JetBrains Mono'; white-space: nowrap; vertical-align: middle; }
         
         .badge { padding: 5px 8px; border-radius: 4px; font-weight: 800; font-size: 9px; cursor: pointer; text-align: center; min-width: 60px; display: inline-block; }
         .b-wait { background: #222; color: #777; }
         .b-win { background: #1b3d2a; color: var(--green); }
         .b-red { background: #3d1b1b; color: var(--red); }
         
-        .btn-del { color: #444; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 5px; transition: 0.2s; }
-        .btn-del:hover { color: var(--red); }
-        .btn-share-row { color: var(--dim); background: transparent; border: none; cursor: pointer; font-size: 14px; transition: 0.2s; }
-        .btn-share-row:hover { color: var(--accent); }
+        .btn-del { color: #444; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 5px; }
+        .btn-share-row { color: var(--dim); background: transparent; border: none; cursor: pointer; font-size: 14px; }
 
         .advanced-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #222; }
-        .stat-box { background: #111315; padding: 10px; border-radius: 10px; border: 1px solid #222; text-align: center; position: relative; }
+        .stat-box { background: #111315; padding: 10px; border-radius: 10px; border: 1px solid #222; text-align: center; }
         .stat-box .val { font-family: 'JetBrains Mono'; font-size: 14px; font-weight: bold; margin-top: 4px; }
 
         .btn-share-main {
             width: 100%; background: rgba(157,125,242,0.1); border: 1px solid var(--accent); color: var(--accent);
             padding: 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer; margin-bottom: 15px;
-            transition: 0.2s; text-transform: uppercase; letter-spacing: 1px;
+            text-transform: uppercase; letter-spacing: 1px;
         }
-        .btn-share-main:hover { background: var(--accent); color: #000; }
 
         .share-overlay {
             position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8);
@@ -92,12 +123,8 @@
         .share-dest { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
         .btn-dest {
             padding: 12px; border-radius: 12px; border: 1px solid #333; background: #111315;
-            color: white; font-weight: 800; font-size: 11px; cursor: pointer; transition: 0.2s;
-            text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;
+            color: white; font-weight: 800; font-size: 11px; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn-dest:hover { background: #222; border-color: var(--accent); }
-        .btn-dest.wa { color: #25d366; }
-        .btn-dest.tg { color: #0088cc; }
 
         #cloud-status { position: fixed; bottom: 10px; right: 10px; font-size: 8px; color: var(--accent); font-weight: bold; }
         @media (max-width: 850px) { .main-wrapper { grid-template-columns: 1fr; } .advanced-stats { grid-template-columns: 1fr 1fr; } }
@@ -109,10 +136,10 @@
 
 <div id="shareOverlay" class="share-overlay" onclick="closeShare()">
     <div class="share-modal" onclick="event.stopPropagation()">
-        <span id="share-title" class="label" style="color:var(--accent); font-size:10px;">Enviar Para:</span>
+        <span class="label" style="color:var(--accent); font-size:10px;">Enviar Para:</span>
         <div class="share-dest">
-            <button class="btn-dest wa" onclick="sendTo('wa')">🟢 WHATSAPP</button>
-            <button class="btn-dest tg" onclick="sendTo('tg')">🔵 TELEGRAM</button>
+            <button class="btn-dest" onclick="sendTo('wa')" style="color:#25d366">🟢 WHATSAPP</button>
+            <button class="btn-dest" onclick="sendTo('tg')" style="color:#0088cc">🔵 TELEGRAM</button>
             <button class="btn-dest" onclick="sendTo('copy')">📋 COPIAR TEXTO</button>
             <button class="btn-dest" style="border-style: dashed; margin-top:10px; opacity:0.6" onclick="closeShare()">CANCELAR</button>
         </div>
@@ -135,32 +162,47 @@
         <div class="calc-card">
             <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.8 - PRO SCANNER</div>
             
+            <div class="input-text-group">
+                <input type="text" id="input-evento" class="text-input" placeholder="Evento (Ex: Everton x Vasco)">
+                <input type="text" id="input-mercado" class="text-input" placeholder="Mercado (Ex: Ambas Marcam + 2.5)">
+            </div>
+
+            <span class="label">CASA DE APOSTAS</span>
+            <div class="bookie-selector" id="bookie-slider">
+                <div class="btn-bookie active" data-color="#ff6b00" onclick="setBookie('Betano', this)">BETANO</div>
+                <div class="btn-bookie" data-color="#007a56" onclick="setBookie('Bet365', this)">BET365</div>
+                <div class="btn-bookie" data-color="#ffb80b" onclick="setBookie('Betfair', this)">BETFAIR</div>
+                <div class="btn-bookie" data-color="#df2027" onclick="setBookie('Superbet', this)">SUPERBET</div>
+                <div class="btn-bookie" data-color="#0055ff" onclick="setBookie('Novibet', this)">NOVIBET</div>
+                <div class="btn-bookie" data-color="#8e44ad" onclick="setBookie('Pinnacle', this)">PINNACLE</div>
+            </div>
+
             <button id="btn-novig" class="btn-novig">
                 <span>GATILHO DE STAKE (MERCADO ABERTO)</span>
-                <span id="novig-status">VIG 3% AUTO</span>
+                <span id="novig-status">VIG 3.5% AUTO</span>
             </button>
 
             <div class="display-grid">
                 <div id="box-fair" class="input-box active" onclick="setTarget('fair')">
                     <span class="label">ODD DE REFERÊNCIA</span>
-                    <div id="val-fair" class="val-display">---</div>
+                    <input type="number" step="0.01" id="val-fair" class="num-field" placeholder="---" oninput="updateVal('fair', this.value)">
                 </div>
                 <div id="box-bookie" class="input-box" onclick="setTarget('bookie')">
                     <span class="label">ODD AVALIADA</span>
-                    <div id="val-bookie" class="val-display">---</div>
+                    <input type="number" step="0.01" id="val-bookie" class="num-field" placeholder="---" oninput="updateVal('bookie', this.value)">
                 </div>
             </div>
 
             <div class="fair-display-box">
-                <span class="label" style="color:var(--accent)">Odd Justa (+3% Margem)</span>
+                <span class="label" style="color:var(--accent)">Odd Justa (+3.5% Margem)</span>
                 <div id="calc-fair-value" style="font-family:'JetBrains Mono'; font-size:22px; font-weight:bold; color:#fff;">@ 0.00</div>
             </div>
 
             <div style="background:#111315; padding:12px; border-radius:12px; margin-bottom:15px; border: 1px solid #222;">
                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-                    <div id="box-m1" class="input-box" onclick="setTarget('m1')"><span class="label">M1</span><div id="val-m1" class="val-display" style="font-size:14px;">1.00</div></div>
-                    <div id="box-m2" class="input-box" onclick="setTarget('m2')"><span class="label">M2</span><div id="val-m2" class="val-display" style="font-size:14px;">1.00</div></div>
-                    <div id="box-m3" class="input-box" onclick="setTarget('m3')"><span class="label">M3</span><div id="val-m3" class="val-display" style="font-size:14px;">1.00</div></div>
+                    <div id="box-m1" class="input-box" onclick="setTarget('m1')"><span class="label">M1</span><input type="number" step="0.01" id="val-m1" class="num-field" style="font-size:14px;" value="1.00" oninput="updateVal('m1', this.value)"></div>
+                    <div id="box-m2" class="input-box" onclick="setTarget('m2')"><span class="label">M2</span><input type="number" step="0.01" id="val-m2" class="num-field" style="font-size:14px;" value="1.00" oninput="updateVal('m2', this.value)"></div>
+                    <div id="box-m3" class="input-box" onclick="setTarget('m3')"><span class="label">M3</span><input type="number" step="0.01" id="val-m3" class="num-field" style="font-size:14px;" value="1.00" oninput="updateVal('m3', this.value)"></div>
                 </div>
                 <div class="selector-row">
                     <button id="m-multi" style="grid-column: span 2" class="btn-sel active" onclick="setMode('multi')">MÚLTIPLA</button>
@@ -191,24 +233,23 @@
             </div>
 
             <button class="btn-share-main" onclick="document.getElementById('optionsOverlay').style.display='flex'">📤 Partilhar Sinal / Resultado</button>
+            <button id="btn-add" onclick="addBet()" style="width:100%; background:var(--accent); color:#000; border:none; padding:18px; border-radius:12px; font-weight:800; font-size:14px; margin-bottom:15px; cursor:pointer;">REGISTRAR OPERAÇÃO</button>
 
-            <button id="btn-add" onclick="addBet()" style="width:100%; background:var(--accent); color:#000; border:none; padding:18px; border-radius:12px; font-weight:800; font-size:14px; margin-bottom:15px; cursor:pointer; transition: 0.2s;">REGISTRAR OPERAÇÃO</button>
-
-            <button class="btn-toggle-pad" onclick="toggleNumpad()" tabindex="-1">⌨ Alternar Teclado Visual</button>
+            <button class="btn-toggle-pad" onclick="toggleNumpad()">⌨ Abrir Teclado Visual do App</button>
 
             <div class="numpad" id="numpad-control">
-                <button class="btn-num" tabindex="-1" onclick="press('1')">1</button>
-                <button class="btn-num" tabindex="-1" onclick="press('2')">2</button>
-                <button class="btn-num" tabindex="-1" onclick="press('3')">3</button>
-                <button class="btn-num" tabindex="-1" onclick="press('4')">4</button>
-                <button class="btn-num" tabindex="-1" onclick="press('5')">5</button>
-                <button class="btn-num" tabindex="-1" onclick="press('6')">6</button>
-                <button class="btn-num" tabindex="-1" onclick="press('7')">7</button>
-                <button class="btn-num" tabindex="-1" onclick="press('8')">8</button>
-                <button class="btn-num" tabindex="-1" onclick="press('9')">9</button>
-                <button class="btn-num" tabindex="-1" onclick="press('.')">.</button>
-                <button class="btn-num" tabindex="-1" onclick="press('0')">0</button>
-                <button class="btn-num" style="background:#352222; color:var(--red);" tabindex="-1" onclick="press('DEL')">⌫</button>
+                <button class="btn-num" onclick="press('1')">1</button>
+                <button class="btn-num" onclick="press('2')">2</button>
+                <button class="btn-num" onclick="press('3')">3</button>
+                <button class="btn-num" onclick="press('4')">4</button>
+                <button class="btn-num" onclick="press('5')">5</button>
+                <button class="btn-num" onclick="press('6')">6</button>
+                <button class="btn-num" onclick="press('7')">7</button>
+                <button class="btn-num" onclick="press('8')">8</button>
+                <button class="btn-num" onclick="press('9')">9</button>
+                <button class="btn-num" onclick="press('.')">.</button>
+                <button class="btn-num" onclick="press('0')">0</button>
+                <button class="btn-num" style="background:#352222; color:var(--red);" onclick="press('DEL')">⌫</button>
             </div>
         </div>
     </div>
@@ -230,36 +271,26 @@
             <div style="height:200px;"><canvas id="profitChart"></canvas></div>
 
             <div class="advanced-stats">
-                <div class="stat-box">
-                    <span class="label">HOJE</span>
-                    <div id="stat-today" class="val">0.00u</div>
-                </div>
-                <div class="stat-box">
-                    <span class="label">NA SEMANA</span>
-                    <div id="stat-week" class="val">0.00u</div>
-                </div>
-                <div class="stat-box">
-                    <span class="label">NO MÊS</span>
-                    <div id="stat-month" class="val">0.00u</div>
-                </div>
-                <div class="stat-box">
-                    <span class="label">ESTÁVEL</span>
-                    <div id="stat-count-total" class="val">0 Bets</div>
-                </div>
+                <div class="stat-box"><span class="label">HOJE</span><div id="stat-today" class="val">0.00u</div></div>
+                <div class="stat-box"><span class="label">SEMANA</span><div id="stat-week" class="val">0.00u</div></div>
+                <div class="stat-box"><span class="label">MÊS</span><div id="stat-month" class="val">0.00u</div></div>
+                <div class="stat-box"><span class="label">TOTAL</span><div id="stat-count-total" class="val">0 Bets</div></div>
             </div>
 
             <div class="tools-row">
-                <button class="btn-tool" onclick="exportData()">Exportar</button>
-                <button class="btn-tool" onclick="document.getElementById('csvIn').click()">Importar</button>
-                <button class="btn-tool" style="color:var(--red)" onclick="clearAll()">Limpar</button>
-                <input type="file" id="csvIn" style="display:none" onchange="importData(this)">
+                <button class="btn-tool" onclick="exportData()">Exportar CSV</button>
+                <button class="btn-tool" style="color:var(--red)" onclick="clearAll()">Limpar Tudo</button>
             </div>
-            <div class="table-container"><table id="history-table"></table></div>
+            
+            <div class="table-container" id="table-scroll-container">
+                <table id="history-table"></table>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+    // Configurações Firebase do usuário
     const firebaseConfig = {
         apiKey: "AIzaSyA7trGWz9RnvuKrK2MULn6YYlu86dBJFdU",
         authDomain: "eliteterminal-2e66e.firebaseapp.com",
@@ -273,210 +304,92 @@
     const db = firebase.database().ref('elite_user_data');
 
     let currentTarget = 'fair';
-    let values = { fair: '', bookie: '', m1: '', m2: '', m3: '' };
-    const tabOrder = ['fair', 'bookie', 'm1', 'm2', 'm3'];
+    let values = { fair: '', bookie: '', m1: '1.00', m2: '1.00', m3: '1.00' };
     let kellyDivisor = 4, mode = 'multi', historyData = [], myChart = null;
     let textToShare = "";
+    let activeBookie = 'Betano';
 
-    function updateChart() {
-        const ctx = document.getElementById('profitChart').getContext('2d');
-        const chartData = [...historyData].reverse();
-        
-        let labels = [];
-        let dataPoints = [];
-        let accum = 0;
-        
-        chartData.forEach((b) => {
-            labels.push(b.date);
-            if (b.status !== 'WAIT') {
-                accum += b.pl;
-            }
-            dataPoints.push(accum);
+    function enableDragScroll(containerId) {
+        const slider = document.getElementById(containerId);
+        if(!slider) return;
+        let isDown = false, startX, scrollLeft, startY, scrollTop;
+        slider.addEventListener('mousedown', (e) => {
+            isDown = true; startX = e.pageX - slider.offsetLeft; startY = e.pageY - slider.offsetTop;
+            scrollLeft = slider.scrollLeft; scrollTop = slider.scrollTop;
         });
-
-        if (myChart) myChart.destroy();
-
-        myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Lucro Acumulado',
-                    data: dataPoints,
-                    borderColor: '#9d7df2',
-                    backgroundColor: 'rgba(157, 125, 242, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { ticks: { display: false }, grid: { display: false } },
-                    y: { ticks: { color: '#666', font: { size: 10 } }, grid: { color: '#222' } }
-                }
-            }
+        slider.addEventListener('mouseleave', () => isDown = false);
+        slider.addEventListener('mouseup', () => isDown = false);
+        slider.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft; const y = e.pageY - slider.offsetTop;
+            slider.scrollLeft = scrollLeft - (x - startX) * 1.5;
+            slider.scrollTop = scrollTop - (y - startY) * 1.5;
         });
     }
 
-    function sharePerformanceReport() {
-        const plToday = document.getElementById('stat-today').innerText;
-        const plWeek = document.getElementById('stat-week').innerText;
-        const plMonth = document.getElementById('stat-month').innerText;
-        const yieldTotal = document.getElementById('stat-roi').innerText;
-        const totalVolume = document.getElementById('stat-count-total').innerText;
-
-        textToShare = `🏆 *ELITE SCANNER - PERFORMANCE*\n` +
-                      `📅 *RELATÓRIO PARCIAL*\n` +
-                      `━━━━━━━━━━━━━━━\n\n` +
-                      `🗓️ *HOJE:* ${plToday}\n` +
-                      `📅 *SEMANA:* ${plWeek}\n` +
-                      `📈 *MÊS:* ${plMonth}\n` +
-                      `🎯 *YIELD TOTAL:* ${yieldTotal}\n\n` +
-                      `📁 *Volume: ${totalVolume}*\n` +
-                      `━━━━━━━━━━━━━━━\n` +
-                      `_Pinnacle Pro Scanner - Engine V14.8_`;
-
-        document.getElementById('shareOverlay').style.display = 'flex';
-    }
-
-    function shareCurrentBet() {
-        const fairVal = document.getElementById('calc-fair-value').innerText;
-        const evalOdd = values.bookie || '---';
-        const stake = document.getElementById('stake-res').innerText;
-        const ev = document.getElementById('ev-res').innerText;
-
-        if(parseFloat(evalOdd) <= 1) {
-            alert("Insira as Odds primeiro!");
-            return;
-        }
-
-        textToShare = `🔥 *ELITE SCANNER V14.8*\n\n` +
-                      `📊 *Sinal Identificado*\n` +
-                      `━━━━━━━━━━━━━━━\n` +
-                      `🎯 Odd Avaliada: @${evalOdd}\n` +
-                      `⚖️ Odd Justa: ${fairVal}\n` +
-                      `💎 Edge (EV+): ${ev}\n\n` +
-                      `💰 Sugestão: *${stake}*\n` +
-                      `━━━━━━━━━━━━━━━\n` +
-                      `_Pinnacle Pro Scanner (Stake Mate Engine)_`;
-
-        document.getElementById('shareOverlay').style.display = 'flex';
-    }
-
-    function shareHistoryBet(id) {
-        const b = historyData.find(x => x.id == id);
-        if(!b) return;
-
-        let statusEmoji = "📈 ⏳ *Aguardando resultado...*";
-        if(b.status.includes('WIN')) statusEmoji = `📈 ✅ *WIN*`;
-        else if(b.status.includes('RED')) statusEmoji = `📈 ❌ *RED*`;
-        else if(b.status.includes('VOID')) statusEmoji = `📈 ⚪ *REEMBOLSADA*`;
-
-        const refOdd = b.ref ? `@${parseFloat(b.ref).toFixed(2)}` : "---";
-        const justaOdd = b.justa ? `@${parseFloat(b.justa).toFixed(2)}` : "---";
-        const infoPL = b.status !== 'WAIT' ? `\n💸 PL: ${b.pl.toFixed(2)}u` : "";
-
-        textToShare = `📅 Data: ${b.date}\n` +
-                      `━━━━━━━━━━━━━━━\n` +
-                      `🎯 Ref: ${refOdd}\n` +
-                      `⚖️ Justa: ${justaOdd}\n` +
-                      `🏆 Entrada: @${b.odd.toFixed(2)}\n` +
-                      `💰 Stake: ${b.stake.toFixed(2)}u${infoPL}\n` +
-                      `${statusEmoji}`;
-
-        document.getElementById('shareOverlay').style.display = 'flex';
-    }
-
-    function sendTo(dest) {
-        const encoded = encodeURIComponent(textToShare);
-        if (dest === 'wa') {
-            window.open(`https://wa.me/?text=${encoded}`, '_blank');
-        } else if (dest === 'tg') {
-            window.open(`https://t.me/share/url?url=&text=${encoded}`, '_blank');
-        } else if (dest === 'copy') {
-            copyToClipboard(textToShare);
-        }
-        closeShare();
-    }
-
-    function closeShare() {
-        document.getElementById('shareOverlay').style.display = 'none';
-    }
-
-    function copyToClipboard(text) {
-        const el = document.createElement('textarea');
-        el.value = text;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-        alert("Copiado para a área de transferência!");
-    }
-
-    function toggleNumpad() {
-        const pad = document.getElementById('numpad-control');
-        pad.classList.toggle('hidden');
-    }
-
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            let idx = tabOrder.indexOf(currentTarget);
-            idx = e.shiftKey ? (idx - 1 + tabOrder.length) % tabOrder.length : (idx + 1) % tabOrder.length;
-            setTarget(tabOrder[idx]);
-            return;
-        }
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            addBet();
-            return;
-        }
-        if ((e.key >= '0' && e.key <= '9') || e.key === '.') press(e.key);
-        if (e.key === 'Backspace') { e.preventDefault(); press('DEL'); }
+    document.addEventListener("DOMContentLoaded", function() {
+        enableDragScroll('bookie-slider');
+        enableDragScroll('table-scroll-container');
+        
+        // CORREÇÃO TAB: Sincroniza o alvo quando focado pelo teclado
+        document.querySelectorAll('.num-field').forEach(input => {
+            input.addEventListener('focus', () => {
+                const target = input.id.replace('val-', '');
+                setTarget(target);
+            });
+        });
     });
+
+    function setBookie(name, el) {
+        activeBookie = name;
+        document.querySelectorAll('.btn-bookie').forEach(btn => {
+            btn.classList.remove('active'); btn.style.borderColor = '#2d3035'; btn.style.color = 'var(--dim)';
+        });
+        el.classList.add('active'); el.style.borderColor = el.getAttribute('data-color'); el.style.color = '#fff';
+    }
 
     function setTarget(t) {
         currentTarget = t;
-        values[t] = ''; 
         document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active'));
         document.getElementById('box-'+t).classList.add('active');
-        refreshUI();
     }
+
+    function updateVal(key, val) { values[key] = val; calculate(); }
 
     function press(key) {
-        if (key === 'DEL') {
-            values[currentTarget] = values[currentTarget].slice(0, -1);
-        } else {
-            if (key === '.' && values[currentTarget].includes('.')) return;
-            if (values[currentTarget].length < 6) values[currentTarget] += key;
-        }
-        refreshUI();
-    }
-
-    db.on('value', snap => {
-        const val = snap.val();
-        historyData = val ? Object.values(val).reverse() : [];
-        renderStats();
-        document.getElementById('cloud-status').innerText = 'NUVEM OK: ' + new Date().toLocaleTimeString();
-    });
-
-    function setMode(m) {
-        mode = m;
-        document.getElementById('m-multi').classList.toggle('active', m==='multi');
-        document.getElementById('m-build').classList.toggle('active', m==='build');
+        let input = document.getElementById('val-' + currentTarget);
+        if (key === 'DEL') values[currentTarget] = values[currentTarget].slice(0, -1);
+        else values[currentTarget] += key;
+        input.value = values[currentTarget];
         calculate();
     }
 
-    function setKelly(k) {
-        kellyDivisor = k;
-        document.querySelectorAll('[id^="k-"]').forEach(b => b.classList.remove('active'));
-        document.getElementById('k-'+k).classList.add('active');
-        calculate();
+    function toggleNumpad() { document.getElementById('numpad-control').classList.toggle('visible'); }
+
+    function calculate() {
+        const refOdd = parseFloat(values.fair), evalOdd = parseFloat(values.bookie);
+        const fairDisplay = document.getElementById('calc-fair-value'), resEl = document.getElementById('stake-res');
+        const evEl = document.getElementById('ev-res'), limEl = document.getElementById('limit-res');
+        
+        if(refOdd > 1) {
+            const calculatedFair = refOdd * 1.035;
+            fairDisplay.innerText = `@ ${calculatedFair.toFixed(2)}`;
+            limEl.innerText = `@ ${calculatedFair.toFixed(2)}`;
+            if(evalOdd > 1) {
+                const ev = (evalOdd / calculatedFair) * 100; 
+                evEl.innerText = `${ev.toFixed(2)}%`;
+                if(ev > 100.00) {
+                    const p = 1 / calculatedFair, q = 1 - p, b_net = evalOdd - 1; 
+                    const fullKelly = (p * b_net - q) / b_net;
+                    let stakeUnits = (fullKelly * 100) / kellyDivisor;
+                    if (stakeUnits > 10.00) stakeUnits = 10.00;
+                    const roundedStake = Math.max(0, Math.round(stakeUnits * 4) / 4);
+                    resEl.innerText = roundedStake > 0 ? roundedStake.toFixed(2) + "u" : "VALOR BAIXO";
+                    resEl.style.color = roundedStake > 0 ? "var(--green)" : "var(--gold)";
+                } else { resEl.innerText = "SEM EDGE"; resEl.style.color = "var(--red)"; }
+            } else { resEl.innerText = "0.00u"; evEl.innerText = "0.00%"; }
+        } else { fairDisplay.innerText = "@ 0.00"; resEl.innerText = "0.00u"; evEl.innerText = "0.00%"; }
     }
 
     function applyCombo() {
@@ -484,153 +397,148 @@
         let res = v1 * v2 * v3;
         if(mode === 'build') res *= 0.85;
         values.fair = res.toFixed(2);
-        refreshUI();
-        setTarget('bookie');
-    }
-
-    function calculate() {
-        const refOdd = parseFloat(values.fair);
-        const evalOdd = parseFloat(values.bookie);
-        const fairDisplay = document.getElementById('calc-fair-value');
-        const resEl = document.getElementById('stake-res');
-        const evEl = document.getElementById('ev-res');
-        const limEl = document.getElementById('limit-res');
-        
-        if(refOdd > 1) {
-            const calculatedFair = refOdd * 1.03;
-            fairDisplay.innerText = `@ ${calculatedFair.toFixed(2)}`;
-            limEl.innerText = `@ ${calculatedFair.toFixed(2)}`;
-            
-            if(evalOdd > 1) {
-                const ev = (evalOdd / calculatedFair) * 100; 
-                evEl.innerText = `${ev.toFixed(2)}%`;
-                
-                if(ev > 100.00) {
-                    const p = 1 / calculatedFair; 
-                    const q = 1 - p; 
-                    const b_net = evalOdd - 1; 
-                    
-                    const fullKelly = (p * b_net - q) / b_net;
-                    let stakeUnits = (fullKelly * 100) / kellyDivisor;
-                    
-                    const MAX_SAFE_STAKE = 10.00;
-                    if (stakeUnits > MAX_SAFE_STAKE) stakeUnits = MAX_SAFE_STAKE;
-                    const roundedStake = Math.max(0, Math.round(stakeUnits * 4) / 4);
-                    
-                    if (roundedStake > 0) {
-                        resEl.innerText = roundedStake.toFixed(2) + "u";
-                        resEl.style.color = "var(--green)";
-                        evEl.style.color = "var(--green)";
-                    } else {
-                        resEl.innerText = "VALOR BAIXO";
-                        resEl.style.color = "var(--gold)";
-                        evEl.style.color = "var(--gold)";
-                    }
-                } else {
-                    resEl.innerText = "SEM EDGE";
-                    resEl.style.color = "var(--red)";
-                    evEl.style.color = "var(--red)";
-                }
-            } else {
-                resEl.innerText = "0.00u"; evEl.innerText = "0.00%"; evEl.style.color = "var(--dim)";
-            }
-        } else {
-            fairDisplay.innerText = "@ 0.00";
-            resEl.innerText = "0.00u"; limEl.innerText = "@ 0.00"; evEl.innerText = "0.00%"; resEl.style.color = "var(--dim)";
-        }
-    }
-
-    function refreshUI() {
-        ['fair','bookie','m1','m2','m3'].forEach(k => {
-            const d = document.getElementById('val-'+k);
-            if(d) d.innerText = values[k] || (k.startsWith('m') ? '1.00' : '---');
-        });
-        calculate();
+        document.getElementById('val-fair').value = values.fair;
+        calculate(); setTarget('bookie');
+        document.getElementById('val-bookie').focus();
     }
 
     function addBet() {
         const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
         if(!b || isNaN(s) || s <= 0) return;
-        
-        const ref = parseFloat(values.fair) || 0;
-        const justa = ref > 1 ? (ref * 1.035).toFixed(2) : 0;
-        
+        const evt = document.getElementById('input-evento').value.toUpperCase() || 'EVENTO';
+        const mkt = document.getElementById('input-mercado').value.toUpperCase() || 'MERCADO';
         const id = Date.now().toString();
-        db.child(id).set({ 
-            id, odd: b, stake: s, ref: ref, justa: justa, 
-            status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() 
-        });
+        db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: evt, mercado: mkt, bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
+        ['fair','bookie','m1','m2','m3'].forEach(k => { values[k] = (k.startsWith('m')?'1.00':''); document.getElementById('val-'+k).value = values[k]; });
+        document.getElementById('input-evento').value = ''; document.getElementById('input-mercado').value = '';
+        calculate();
+    }
+
+    db.on('value', snap => {
+        // CORREÇÃO BANCO: Muda status ao conectar
+        const statusEl = document.getElementById('cloud-status');
+        statusEl.innerText = "NUVEM ATIVA";
+        statusEl.style.color = "var(--green)";
         
-        values.fair = ''; values.bookie = '';
-        refreshUI();
-    }
-
-    function deleteBet(id) {
-        if(confirm("Excluir esta operação?")) db.child(id).remove();
-    }
-
-    function updateStatus(id) {
-        const b = historyData.find(x => x.id == id);
-        if(!b) return;
-        const st = ['WAIT', 'WIN', '1/2 WIN', 'VOID', '1/2 RED', 'RED'];
-        b.status = st[(st.indexOf(b.status)+1)%st.length];
-        if(b.status==='WIN') b.pl = (b.odd-1)*b.stake;
-        else if(b.status==='1/2 WIN') b.pl = ((b.odd-1)*b.stake)/2;
-        else if(b.status==='1/2 RED') b.pl = -(b.stake/2);
-        else if(b.status==='RED') b.pl = -b.stake;
-        else b.pl = 0;
-        db.child(id).update(b);
-    }
+        const val = snap.val();
+        historyData = val ? Object.values(val).sort((a,b) => b.timestamp - a.timestamp) : [];
+        renderStats();
+    });
 
     function renderStats() {
         const tb = document.getElementById('history-table'); if(!tb) return;
         tb.innerHTML = '';
+        let totalPL = 0, invest = 0, todayPL = 0, weekPL = 0, monthPL = 0;
+        const now = Date.now();
         
-        let totalPL = 0, invest = 0;
-        let todayPL = 0, weekPL = 0, monthPL = 0;
-        const agora = Date.now();
-        const hojeStr = new Date().toLocaleDateString();
-
         historyData.forEach(b => {
             totalPL += b.pl; 
             if(b.status!=='WAIT') invest += b.stake;
 
-            const diffDays = (agora - b.timestamp) / (1000 * 60 * 60 * 24);
-            
-            if(b.date === hojeStr) todayPL += b.pl;
+            const diffDays = (now - b.timestamp) / (1000 * 60 * 60 * 24);
+            if(diffDays <= 1) todayPL += b.pl;
             if(diffDays <= 7) weekPL += b.pl;
             if(diffDays <= 30) monthPL += b.pl;
 
             let cls = b.status.includes('WIN')?'b-win':b.status.includes('RED')?'b-red':'b-wait';
-            
             tb.innerHTML += `<tr>
                 <td style="width:25px"><button class="btn-share-row" onclick="shareHistoryBet('${b.id}')">📲</button></td>
-                <td>${b.date}</td>
-                <td>@${b.odd.toFixed(2)}</td>
-                <td>${b.stake.toFixed(2)}u</td>
+                <td>
+                    <div style="color:var(--accent); font-size:9px; font-weight:800;">[${b.bookie}]</div>
+                    <div style="color:white; font-weight:bold; font-size:11px;">${b.evento}</div>
+                    <div style="color:var(--gold); font-size:10px; font-weight:800; margin-top:2px;">${b.mercado}</div>
+                </td>
+                <td style="text-align:center">@${b.odd.toFixed(2)}</td>
+                <td style="text-align:center">${b.stake.toFixed(2)}u</td>
                 <td style="color:${b.pl>=0?'var(--green)':'var(--red)'}">${b.pl.toFixed(2)}</td>
-                <td style="text-align:right"><span class="badge ${cls}" onclick="updateStatus('${b.id}')">${b.status}</span></td>
-                <td style="width:25px; text-align:right"><button class="btn-del" onclick="deleteBet('${b.id}')">×</button></td>
+                <td><span class="badge ${cls}" onclick="updateStatus('${b.id}')">${b.status}</span></td>
+                <td><button class="btn-del" onclick="deleteBet('${b.id}')">×</button></td>
             </tr>`;
         });
 
         document.getElementById('stat-pl').innerText = totalPL.toFixed(2)+'u';
-        document.getElementById('stat-pl').style.color = totalPL>=0?'var(--green)':'var(--red)';
         document.getElementById('stat-roi').innerText = (invest>0?(totalPL/invest*100):0).toFixed(1)+'%';
         document.getElementById('stat-invested').innerText = invest.toFixed(2)+'u';
-        document.getElementById('stat-count-total').innerText = historyData.length + ' Bets';
-
         document.getElementById('stat-today').innerText = todayPL.toFixed(2)+'u';
-        document.getElementById('stat-today').style.color = todayPL>=0?'var(--green)':'var(--red)';
         document.getElementById('stat-week').innerText = weekPL.toFixed(2)+'u';
-        document.getElementById('stat-week').style.color = weekPL>=0?'var(--green)':'var(--red)';
         document.getElementById('stat-month').innerText = monthPL.toFixed(2)+'u';
-        document.getElementById('stat-month').style.color = monthPL>=0?'var(--green)':'var(--red)';
-
+        document.getElementById('stat-count-total').innerText = historyData.length + ' Bets';
         updateChart();
     }
 
-    function clearAll() { if(confirm("APAGAR TUDO?")) db.set(null); }
+    function updateChart() {
+        const ctx = document.getElementById('profitChart').getContext('2d');
+        const chartData = [...historyData].reverse();
+        let labels = [], dataPoints = [], accum = 0;
+        chartData.forEach(b => { labels.push(b.date); accum += b.pl; dataPoints.push(accum); });
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'PL', data: dataPoints, borderColor: '#9d7df2', fill: true, tension: 0.3, backgroundColor: 'rgba(157,125,242,0.1)' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#222' } } } }
+        });
+    }
+
+    function exportData() {
+        if(historyData.length === 0) return;
+        let csv = "Data,Evento,Mercado,Casa,Odd,Stake,PL,Status\n";
+        historyData.forEach(b => {
+            csv += `${b.date},${b.evento},${b.mercado},${b.bookie},${b.odd},${b.stake},${b.pl},${b.status}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', ''); a.setAttribute('href', url); a.setAttribute('download', 'historico_elite.csv');
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+
+    function shareCurrentBet() {
+        const evt = document.getElementById('input-evento').value || '---';
+        const mkt = document.getElementById('input-mercado').value || '---';
+        const odd = values.bookie || '0.00';
+        const stk = document.getElementById('stake-res').innerText;
+        textToShare = `🚀 *SINAL ELITE PRO*\n🏟️ *${evt.toUpperCase()}*\n📌 Mercado: ${mkt.toUpperCase()}\n🏠 Casa: ${activeBookie}\n🏆 Odd: @${odd}\n💰 Stake Sugerida: ${stk}`;
+        document.getElementById('shareOverlay').style.display = 'flex';
+    }
+
+    function sharePerformanceReport() {
+        const pl = document.getElementById('stat-pl').innerText;
+        const roi = document.getElementById('stat-roi').innerText;
+        const count = document.getElementById('stat-count-total').innerText;
+        textToShare = `📊 *RELATÓRIO DE PERFORMANCE*\n✅ Total de Bets: ${count}\n💰 Lucro Total: ${pl}\n📈 Yield/ROI: ${roi}\n\n_Gerado por Elite V14.8 Terminal_`;
+        document.getElementById('shareOverlay').style.display = 'flex';
+    }
+
+    function shareHistoryBet(id) {
+        const b = historyData.find(x => x.id == id);
+        textToShare = `🔥 *REGISTRO ELITE*\n🏟️ *${b.evento}*\n📌 Mercado: ${b.mercado}\n🏠 Casa: ${b.bookie}\n🏆 Odd: @${b.odd.toFixed(2)}\n💰 Stake: ${b.stake.toFixed(2)}u\n📊 Status: ${b.status}`;
+        document.getElementById('shareOverlay').style.display = 'flex';
+    }
+
+    function sendTo(dest) {
+        const encoded = encodeURIComponent(textToShare);
+        if (dest === 'wa') window.open(`https://wa.me/?text=${encoded}`, '_blank');
+        else if (dest === 'tg') window.open(`https://t.me/share/url?url=&text=${encoded}`, '_blank');
+        else if (dest === 'copy') { navigator.clipboard.writeText(textToShare); alert("Copiado!"); }
+        closeShare();
+    }
+
+    function setMode(m) { mode = m; document.getElementById('m-multi').classList.toggle('active', m==='multi'); document.getElementById('m-build').classList.toggle('active', m==='build'); calculate(); }
+    function setKelly(k) { kellyDivisor = k; document.querySelectorAll('[id^="k-"]').forEach(b => b.classList.remove('active')); document.getElementById('k-'+k).classList.add('active'); calculate(); }
+    function deleteBet(id) { if(confirm("Excluir registro?")) db.child(id).remove(); }
+    function clearAll() { if(confirm("LIMPAR TODO O HISTÓRICO?")) db.set(null); }
+    function closeShare() { document.getElementById('shareOverlay').style.display = 'none'; }
+    function updateStatus(id) {
+        const b = historyData.find(x => x.id == id);
+        const st = ['WAIT', 'WIN', '1/2 WIN', 'VOID', '1/2 RED', 'RED'];
+        b.status = st[(st.indexOf(b.status)+1)%st.length];
+        if(b.status==='WIN') b.pl = (b.odd-1)*b.stake;
+        else if(b.status==='1/2 WIN') b.pl = ((b.odd-1)*b.stake)/2;
+        else if(b.status==='RED') b.pl = -b.stake;
+        else if(b.status==='1/2 RED') b.pl = -b.stake/2;
+        else b.pl = 0;
+        db.child(id).update(b);
+    }
 </script>
 </body>
 </html>
