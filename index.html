@@ -90,6 +90,18 @@
         .b-win { background: #1b3d2a; color: var(--green); }
         .b-red { background: #3d1b1b; color: var(--red); }
         .b-void { background: #1a1c1e; color: #888; border: 1px solid #333; }
+
+        /* NOVO: ESTILOS DO MENU DE STATUS RÁPIDO */
+        .status-menu-popup {
+            position: fixed; background: #1c1f22; border: 1px solid #333; border-radius: 12px;
+            display: none; flex-direction: column; gap: 5px; padding: 10px; z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 140px;
+        }
+        .status-option {
+            padding: 10px; border-radius: 6px; font-size: 10px; font-weight: 800;
+            text-align: center; cursor: pointer; text-transform: uppercase; transition: 0.2s;
+        }
+        .status-option:hover { filter: brightness(1.3); transform: scale(1.02); }
         
         .btn-del { color: #444; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 5px; }
         .btn-share-row { color: var(--dim); background: transparent; border: none; cursor: pointer; font-size: 14px; }
@@ -125,6 +137,15 @@
 <body>
 
 <div id="cloud-status">SINCRONIZANDO...</div>
+
+<div id="quickStatusMenu" class="status-menu-popup">
+    <div class="status-option b-win" onclick="confirmStatus('WIN')">WIN</div>
+    <div class="status-option b-win" style="opacity:0.8" onclick="confirmStatus('1/2 WIN')">1/2 WIN</div>
+    <div class="status-option b-red" onclick="confirmStatus('RED')">RED</div>
+    <div class="status-option b-red" style="opacity:0.8" onclick="confirmStatus('1/2 RED')">1/2 RED</div>
+    <div class="status-option b-void" onclick="confirmStatus('VOID')">VOID</div>
+    <div class="status-option b-wait" onclick="confirmStatus('WAIT')">WAIT</div>
+</div>
 
 <div id="optionsOverlay" class="share-overlay" onclick="this.style.display='none'">
     <div class="share-modal" onclick="event.stopPropagation()">
@@ -304,6 +325,7 @@
     let kellyDivisor = 4, mode = 'multi', historyData = [], myChart = null;
     let textToShare = "";
     let activeBookie = 'Betano';
+    let currentEditingId = null; // Para o menu de status
 
     function enableDragScroll(containerId) {
         const slider = document.getElementById(containerId);
@@ -324,30 +346,30 @@
         });
     }
 
-    // A SOLUÇÃO CENTRAL DO CLICOU-LIMPOU E DO TAB
+    // FECHAR O MENU AO CLICAR FORA
+    window.onclick = function(event) {
+        if (!event.target.classList.contains('badge')) {
+            document.getElementById('quickStatusMenu').style.display = 'none';
+        }
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
         enableDragScroll('bookie-slider');
         enableDragScroll('table-scroll-container');
         
-        // Clicou-Limpou para Campos Numéricos (Odds/Múltiplas)
         document.querySelectorAll('.num-field').forEach(input => {
             input.addEventListener('focus', function() {
                 let t = this.id.replace('val-', '');
                 currentTarget = t;
-                
-                // Atualiza o Visual (Borda Roxa) ao andar com o TAB
                 document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active'));
                 let box = document.getElementById('box-'+t);
                 if(box) box.classList.add('active');
-                
-                // Limpa o valor para nova digitação
                 this.value = '';
                 values[t] = '';
                 calculate();
             });
         });
 
-        // Clicou-Limpou para Campos de Texto (Evento/Mercado)
         document.querySelectorAll('.text-input').forEach(input => {
             input.addEventListener('focus', function() {
                 this.value = '';
@@ -355,12 +377,37 @@
         });
     });
 
-    // Função que aciona o Input ao clicar na caixa Div (Otimizada para não quebrar o TAB)
+    // NOVA FUNÇÃO: ABRE O MENU DE OPÇÕES NO LUGAR DO CLICK
+    function openStatusMenu(id, element) {
+        currentEditingId = id;
+        const menu = document.getElementById('quickStatusMenu');
+        const rect = element.getBoundingClientRect();
+        
+        menu.style.display = 'flex';
+        // Posicionamento inteligente para não fugir da tela
+        menu.style.top = (rect.top + window.scrollY) + 'px';
+        menu.style.left = (rect.left - 150) + 'px'; 
+    }
+
+    // NOVA FUNÇÃO: CONFIRMA A ESCOLHA DO MENU
+    function confirmStatus(status) {
+        if(!currentEditingId) return;
+        const b = historyData.find(x => x.id == currentEditingId);
+        b.status = status;
+        
+        if(status === 'WIN') b.pl = (b.odd - 1) * b.stake;
+        else if(status === '1/2 WIN') b.pl = ((b.odd - 1) * b.stake) / 2;
+        else if(status === 'RED') b.pl = -b.stake;
+        else if(status === '1/2 RED') b.pl = -b.stake / 2;
+        else b.pl = 0; // WAIT ou VOID
+
+        db.child(currentEditingId).update(b);
+        document.getElementById('quickStatusMenu').style.display = 'none';
+    }
+
     function setTarget(t) {
         let input = document.getElementById('val-'+t);
-        if (input) {
-            input.focus(); // O .focus() aciona a regra ali em cima que faz o "Clicou Limpou"
-        }
+        if (input) input.focus();
     }
 
     function setBookie(name, el) {
@@ -430,7 +477,6 @@
         
         db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: evt, mercado: mkt, bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
         
-        // Limpa tudo após registrar
         values = { fair: '', bookie: '', m1: '1.00', m2: '1.00', m3: '1.00' };
         ['fair','bookie','m1','m2','m3'].forEach(k => { 
             let el = document.getElementById('val-'+k);
@@ -480,7 +526,7 @@
                 <td style="text-align:center">@${b.odd.toFixed(2)}</td>
                 <td style="text-align:center">${b.stake.toFixed(2)}u</td>
                 <td style="color:${b.pl>=0?'var(--green)':'var(--red)'}">${b.pl.toFixed(2)}</td>
-                <td><span class="badge ${cls}" onclick="updateStatus('${b.id}')">${b.status}</span></td>
+                <td><span class="badge ${cls}" onclick="openStatusMenu('${b.id}', this)">${b.status}</span></td>
                 <td><button class="btn-del" onclick="deleteBet('${b.id}')">×</button></td>
             </tr>`;
         });
@@ -564,20 +610,6 @@
     function clearAll() { if(confirm("LIMPAR TODO O HISTÓRICO?")) db.set(null); }
     function closeShare() { document.getElementById('shareOverlay').style.display = 'none'; }
     
-    function updateStatus(id) {
-        const b = historyData.find(x => x.id == id);
-        const st = ['WAIT', 'WIN', '1/2 WIN', 'VOID', '1/2 RED', 'RED'];
-        b.status = st[(st.indexOf(b.status)+1)%st.length];
-        
-        if(b.status==='WIN') b.pl = (b.odd-1)*b.stake;
-        else if(b.status==='1/2 WIN') b.pl = ((b.odd-1)*b.stake)/2;
-        else if(b.status==='RED') b.pl = -b.stake;
-        else if(b.status==='1/2 RED') b.pl = -b.stake/2;
-        else b.pl = 0;
-        
-        db.child(id).update(b);
-    }
-
     function exportData() {
         if(historyData.length === 0) return;
         let csv = "Data,Evento,Mercado,Casa,Odd,Stake,PL,Status\n";
