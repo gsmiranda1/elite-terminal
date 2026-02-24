@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/tesseract.js@2.1.4/dist/tesseract.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -22,6 +23,13 @@
         .calc-card, .chart-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #26292c; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .display-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
         
+        .btn-scan {
+            width: 100%; background: #1a1c20; border: 1px dashed var(--accent); color: var(--accent);
+            padding: 10px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer;
+            margin-bottom: 10px; text-transform: uppercase; transition: 0.2s;
+        }
+        .btn-scan:active { background: var(--accent); color: #000; }
+
         .input-text-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
         .text-input { 
             background: #111315; border: 1px solid #2d3035; padding: 12px; border-radius: 8px; 
@@ -91,7 +99,6 @@
         .b-red { background: #3d1b1b; color: var(--red); }
         .b-void { background: #1a1c1e; color: #888; border: 1px solid #333; }
 
-        /* NOVO: ESTILOS DO MENU DE STATUS RÁPIDO */
         .status-menu-popup {
             position: fixed; background: #1c1f22; border: 1px solid #333; border-radius: 12px;
             display: none; flex-direction: column; gap: 5px; padding: 10px; z-index: 10000;
@@ -176,6 +183,9 @@
         <div class="calc-card">
             <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.8 - PRO SCANNER</div>
             
+            <button id="btn-ocr" class="btn-scan" onclick="triggerFileSelect()">📷 SCAN PRINT / CTRL+V</button>
+            <input type="file" id="ocr-upload" accept="image/*" style="display:none" onchange="processPrint(this.files[0])">
+
             <div class="input-text-group">
                 <input type="text" id="input-evento" class="text-input" placeholder="Evento (Ex: Everton x Vasco)">
                 <input type="text" id="input-mercado" class="text-input" placeholder="Mercado (Ex: Ambas Marcam + 2.5)">
@@ -325,8 +335,145 @@
     let kellyDivisor = 4, mode = 'multi', historyData = [], myChart = null;
     let textToShare = "";
     let activeBookie = 'Betano';
-    let currentEditingId = null; // Para o menu de status
+    let currentEditingId = null;
 
+    // --- OCR E PASTE LISTENERS ---
+    function triggerFileSelect() {
+        document.getElementById('ocr-upload').click();
+    }
+
+    document.addEventListener('paste', async (e) => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                processPrint(blob);
+            }
+        }
+    });
+
+    async function processPrint(file) {
+        if (!file) return;
+        const btn = document.getElementById('btn-ocr');
+        btn.innerText = "⌛ LENDO TEXTO...";
+        btn.style.borderColor = "var(--gold)";
+        btn.style.color = "var(--gold)";
+
+        try {
+            const { data: { text } } = await Tesseract.recognize(
+                file,
+                'por',
+                { logger: m => console.log(m) }
+            );
+
+            parseBetData(text);
+            btn.innerText = "✅ SCAN CONCLUÍDO";
+            btn.style.borderColor = "var(--green)";
+            btn.style.color = "var(--green)";
+            setTimeout(() => {
+                btn.innerText = "📷 SCAN PRINT / CTRL+V";
+                btn.style.borderColor = "var(--accent)";
+                btn.style.color = "var(--accent)";
+            }, 3000);
+
+        } catch (e) {
+            alert("Erro ao ler imagem.");
+            btn.innerText = "❌ ERRO NO SCAN";
+        }
+    }
+
+    // --- LÓGICA DE CAPTURA MELHORADA ---
+    function parseBetData(rawText) {
+        // Limpeza de caracteres especiais/ícones antes de segmentar
+        let cleanRaw = rawText.replace(/[|@#$_\[\]{}]/g, ' ');
+        
+        // Segmentação por linhas e limpeza de espaços extras
+        const rawLines = cleanRaw.split('\n')
+            .map(l => l.trim().toUpperCase())
+            .filter(l => l.length > 2);
+        
+        const marketDict = {
+            gols: ["OVER", "UNDER", "MAIS DE", "MENOS DE", "GOLS", "TOTAL", "2.5", "3.5", "1.5", "0.5"],
+            ambas: ["AMBAS", "SIM", "NÃO", "MARCAM", "BTTS"],
+            cantos: ["ESCANTEIOS", "CANTOS", "CORNERS", "ANGULARES"],
+            cartoes: ["CARTÃO", "CARTÕES", "CARD", "VERMELHO", "AMARELO"],
+            anytime: ["MARCAR", "JOGADOR", "ANYTIME", "MARCADOR", "PLAYER"],
+            ml: ["VENCEDOR", "1X2", "RESULTADO FINAL", "DRAW NO BET", "DNB"]
+        };
+
+        const ignoreDict = ["BILHETE", "ID", "DATA", "HORA", "APOSTA", "VALOR", "CASH OUT", "ENCERRAR", "RETORNO", "ELITE", "PRO SCANNER", "TERMINAL", "LOGIN", "SALDO"];
+        const tennisKeywords = ["ATP", "WTA", "ITF", "CHALLENGER", "OPEN", "SINGLES", "DOUBLES"];
+
+        let detectedMarkets = [];
+        let detectedOdd = "";
+        let potentialEvents = [];
+
+        rawLines.forEach((line, index) => {
+            // 1. Identificar Mercados
+            let isMarket = false;
+            for (let category in marketDict) {
+                if (marketDict[category].some(keyword => line.includes(keyword))) {
+                    isMarket = true;
+                    break;
+                }
+            }
+            if (isMarket && !detectedMarkets.includes(line)) {
+                // Remove lixo comum de dentro da linha do mercado
+                let marketLine = line.replace(/[^A-Z0-9.+ ]/g, '').trim();
+                detectedMarkets.push(marketLine);
+            }
+
+            // 2. Identificar Odds (Formato decimal x.xx)
+            const oddMatch = line.match(/\b([1-9]\.\d{2})\b/);
+            if (oddMatch && !detectedOdd) detectedOdd = oddMatch[1];
+
+            // 3. Identificar Eventos (Nova Heurística)
+            // Filtro A: Separadores clássicos
+            if (line.includes(" X ") || line.includes(" VS ") || line.includes(" - ") || line.includes(" @ ")) {
+                if (!potentialEvents.includes(line)) potentialEvents.push(line);
+            }
+            
+            // Filtro B: Tênis/Ligas (Linhas com palavras de Tênis geralmente são o evento ou a liga logo acima)
+            if (tennisKeywords.some(tk => line.includes(tk))) {
+                if (!potentialEvents.includes(line)) potentialEvents.push(line);
+            }
+
+            // Filtro C: Nomes Próprios (Linhas no topo sem números e sem palavras proibidas)
+            if (index < 6 && !isMarket && !line.match(/\d/) && !ignoreDict.some(ig => line.includes(ig))) {
+                // Se a linha tem pelo menos duas palavras "grandes", chance alta de ser time/jogador
+                const words = line.split(' ').filter(w => w.length >= 3);
+                if (words.length >= 2 && !potentialEvents.includes(line)) {
+                    potentialEvents.push(line);
+                }
+            }
+        });
+
+        const eventInput = document.getElementById('input-evento');
+        const marketInput = document.getElementById('input-mercado');
+        const bookieOddInput = document.getElementById('val-bookie');
+
+        // Atribuição de Evento (Prioridade para quem tem separador 'X' ou 'VS')
+        if (potentialEvents.length > 0) {
+            const bestEvent = potentialEvents.find(e => e.includes(" X ") || e.includes(" VS ")) || potentialEvents[0];
+            eventInput.value = bestEvent.trim();
+        } else {
+            eventInput.value = (rawLines[0] && rawLines[0].length < 40) ? rawLines[0] : "";
+        }
+
+        // Atribuição de Mercado (Se for BetBuilder, concatena)
+        if (detectedMarkets.length > 0) {
+            marketInput.value = detectedMarkets.slice(0, 3).join(" + ");
+        }
+
+        // Atribuição de Odd
+        if (detectedOdd) {
+            bookieOddInput.value = detectedOdd;
+            values.bookie = detectedOdd;
+            calculate();
+        }
+    }
+
+    // --- FUNÇÕES DE INTERFACE ---
     function enableDragScroll(containerId) {
         const slider = document.getElementById(containerId);
         if(!slider) return;
@@ -346,7 +493,6 @@
         });
     }
 
-    // FECHAR O MENU AO CLICAR FORA
     window.onclick = function(event) {
         if (!event.target.classList.contains('badge')) {
             document.getElementById('quickStatusMenu').style.display = 'none';
@@ -357,50 +503,47 @@
         enableDragScroll('bookie-slider');
         enableDragScroll('table-scroll-container');
         
-        document.querySelectorAll('.num-field').forEach(input => {
+        // --- REGRA DE CLIQUE (1 CLIQUE EDITAR / 2 CLIQUES LIMPAR) ---
+        document.querySelectorAll('.num-field, .text-input').forEach(input => {
             input.addEventListener('focus', function() {
                 let t = this.id.replace('val-', '');
-                currentTarget = t;
-                document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active'));
-                let box = document.getElementById('box-'+t);
-                if(box) box.classList.add('active');
-                this.value = '';
-                values[t] = '';
-                calculate();
+                if (values.hasOwnProperty(t)) {
+                    currentTarget = t;
+                    document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active'));
+                    let box = document.getElementById('box-'+t);
+                    if(box) box.classList.add('active');
+                }
             });
-        });
 
-        document.querySelectorAll('.text-input').forEach(input => {
-            input.addEventListener('focus', function() {
+            input.addEventListener('dblclick', function() {
                 this.value = '';
+                let t = this.id.replace('val-', '');
+                if (values.hasOwnProperty(t)) {
+                    values[t] = '';
+                    calculate();
+                }
             });
         });
     });
 
-    // NOVA FUNÇÃO: ABRE O MENU DE OPÇÕES NO LUGAR DO CLICK
     function openStatusMenu(id, element) {
         currentEditingId = id;
         const menu = document.getElementById('quickStatusMenu');
         const rect = element.getBoundingClientRect();
-        
         menu.style.display = 'flex';
-        // Posicionamento inteligente para não fugir da tela
         menu.style.top = (rect.top + window.scrollY) + 'px';
         menu.style.left = (rect.left - 150) + 'px'; 
     }
 
-    // NOVA FUNÇÃO: CONFIRMA A ESCOLHA DO MENU
     function confirmStatus(status) {
         if(!currentEditingId) return;
         const b = historyData.find(x => x.id == currentEditingId);
         b.status = status;
-        
         if(status === 'WIN') b.pl = (b.odd - 1) * b.stake;
         else if(status === '1/2 WIN') b.pl = ((b.odd - 1) * b.stake) / 2;
         else if(status === 'RED') b.pl = -b.stake;
         else if(status === '1/2 RED') b.pl = -b.stake / 2;
-        else b.pl = 0; // WAIT ou VOID
-
+        else b.pl = 0;
         db.child(currentEditingId).update(b);
         document.getElementById('quickStatusMenu').style.display = 'none';
     }
@@ -418,10 +561,7 @@
         el.classList.add('active'); el.style.borderColor = el.getAttribute('data-color'); el.style.color = '#fff';
     }
 
-    function updateVal(key, val) { 
-        values[key] = val; 
-        calculate(); 
-    }
+    function updateVal(key, val) { values[key] = val; calculate(); }
 
     function press(key) {
         let input = document.getElementById('val-' + currentTarget);
@@ -437,7 +577,6 @@
         const refOdd = parseFloat(values.fair), evalOdd = parseFloat(values.bookie);
         const fairDisplay = document.getElementById('calc-fair-value'), resEl = document.getElementById('stake-res');
         const evEl = document.getElementById('ev-res'), limEl = document.getElementById('limit-res');
-        
         if(refOdd > 1) {
             const calculatedFair = refOdd * 1.035;
             fairDisplay.innerText = `@ ${calculatedFair.toFixed(2)}`;
@@ -470,13 +609,10 @@
     function addBet() {
         const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
         if(!b || isNaN(s) || s <= 0) return;
-        
         const evt = document.getElementById('input-evento').value.toUpperCase() || 'EVENTO';
         const mkt = document.getElementById('input-mercado').value.toUpperCase() || 'MERCADO';
         const id = Date.now().toString();
-        
         db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: evt, mercado: mkt, bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
-        
         values = { fair: '', bookie: '', m1: '1.00', m2: '1.00', m3: '1.00' };
         ['fair','bookie','m1','m2','m3'].forEach(k => { 
             let el = document.getElementById('val-'+k);
@@ -484,9 +620,7 @@
         });
         document.getElementById('input-evento').value = ''; 
         document.getElementById('input-mercado').value = '';
-        
-        calculate();
-        setTarget('fair');
+        calculate(); setTarget('fair');
     }
 
     db.on('value', snap => {
@@ -502,7 +636,6 @@
         tb.innerHTML = '';
         let totalPL = 0, invest = 0, todayPL = 0, weekPL = 0, monthPL = 0;
         const now = Date.now();
-        
         historyData.forEach(b => {
             totalPL += b.pl; 
             if(b.status!=='WAIT' && b.status!=='VOID') invest += b.stake;
@@ -510,12 +643,10 @@
             if(diffDays <= 1) todayPL += b.pl;
             if(diffDays <= 7) weekPL += b.pl;
             if(diffDays <= 30) monthPL += b.pl;
-
             let cls = 'b-wait';
             if(b.status.includes('WIN')) cls = 'b-win';
             else if(b.status.includes('RED')) cls = 'b-red';
             else if(b.status === 'VOID') cls = 'b-void';
-
             tb.innerHTML += `<tr>
                 <td style="width:25px"><button class="btn-share-row" onclick="shareHistoryBet('${b.id}')">📲</button></td>
                 <td>
@@ -530,7 +661,6 @@
                 <td><button class="btn-del" onclick="deleteBet('${b.id}')">×</button></td>
             </tr>`;
         });
-
         document.getElementById('stat-pl').innerText = totalPL.toFixed(2)+'u';
         document.getElementById('stat-roi').innerText = (invest>0?(totalPL/invest*100):0).toFixed(1)+'%';
         document.getElementById('stat-invested').innerText = invest.toFixed(2)+'u';
@@ -613,9 +743,7 @@
     function exportData() {
         if(historyData.length === 0) return;
         let csv = "Data,Evento,Mercado,Casa,Odd,Stake,PL,Status\n";
-        historyData.forEach(b => {
-            csv += `${b.date},${b.evento},${b.mercado},${b.bookie},${b.odd},${b.stake},${b.pl},${b.status}\n`;
-        });
+        historyData.forEach(b => { csv += `${b.date},${b.evento},${b.mercado},${b.bookie},${b.odd},${b.stake},${b.pl},${b.status}\n`; });
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
