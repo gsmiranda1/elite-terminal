@@ -202,13 +202,9 @@
                 <div class="btn-bookie" data-color="#FF6D2D" onclick="setBookie('BetpontoBet', this)">BETPONTOBET</div>
                 <div class="btn-bookie" data-color="#1C1C1C" onclick="setBookie('ZeroUm', this)">ZEROUM</div>
                 <div class="btn-bookie" data-color="#FFD700" onclick="setBookie('JogodeOuro', this)">JOGODEOURO</div>
+                <div class="btn-bookie" data-color="#FFD700" onclick="setBookie('OleyBet', this)">OLEYBET</div>
                 <div class="btn-bookie" data-color="#8e44ad" onclick="setBookie('Pinnacle', this)">PINNACLE</div>
             </div>
-
-            <button id="btn-novig" class="btn-novig">
-                <span>GATILHO DE STAKE (MERCADO ABERTO)</span>
-                <span id="novig-status">VIG 3.5% AUTO</span>
-            </button>
 
             <div class="display-grid">
                 <div id="box-fair" class="input-box active" onclick="setTarget('fair')">
@@ -222,7 +218,7 @@
             </div>
 
             <div class="fair-display-box">
-                <span class="label" style="color:var(--accent)">Odd Justa (+3.5% Margem)</span>
+                <span class="label" style="color:var(--accent)">Odd Justa (+3% Margem)</span>
                 <div id="calc-fair-value" style="font-family:'JetBrains Mono'; font-size:22px; font-weight:bold; color:#fff;">@ 0.00</div>
             </div>
 
@@ -578,7 +574,7 @@
         const fairDisplay = document.getElementById('calc-fair-value'), resEl = document.getElementById('stake-res');
         const evEl = document.getElementById('ev-res'), limEl = document.getElementById('limit-res');
         if(refOdd > 1) {
-            const calculatedFair = refOdd * 1.035;
+            const calculatedFair = refOdd * 1.03;
             fairDisplay.innerText = `@ ${calculatedFair.toFixed(2)}`;
             limEl.innerText = `@ ${calculatedFair.toFixed(2)}`;
             if(evalOdd > 1) {
