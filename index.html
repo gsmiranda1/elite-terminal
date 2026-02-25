@@ -66,13 +66,6 @@
             padding: 10px; border-radius: 12px; margin-bottom: 12px; text-align: center;
         }
 
-        .btn-novig {
-            width: 100%; padding: 10px; border-radius: 8px; font-size: 10px; font-weight: 800; cursor: default;
-            border: 1px solid #333; margin-bottom: 12px; transition: 0.3s;
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(157,125,242,0.1); color: var(--accent); border-color: var(--accent);
-        }
-
         .numpad { display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
         .numpad.visible { display: grid; }
         
@@ -108,7 +101,6 @@
             padding: 10px; border-radius: 6px; font-size: 10px; font-weight: 800;
             text-align: center; cursor: pointer; text-transform: uppercase; transition: 0.2s;
         }
-        .status-option:hover { filter: brightness(1.3); transform: scale(1.02); }
         
         .btn-del { color: #444; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 5px; }
         .btn-share-row { color: var(--dim); background: transparent; border: none; cursor: pointer; font-size: 14px; }
@@ -225,21 +217,17 @@
             </div>
 
             <div style="background:#111315; padding:12px; border-radius:12px; margin-bottom:15px; border: 1px solid #222;">
+                <span class="label" style="text-align:center; margin-bottom:8px;">Calculadora de Múltipla (Auto-Update)</span>
                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-                    <div id="box-m1" class="input-box" onclick="setTarget('m1')"><span class="label">M1</span><input type="number" step="0.01" inputmode="decimal" id="val-m1" class="num-field" style="font-size:14px;" value="1.00" oninput="updateVal('m1', this.value)"></div>
-                    <div id="box-m2" class="input-box" onclick="setTarget('m2')"><span class="label">M2</span><input type="number" step="0.01" inputmode="decimal" id="val-m2" class="num-field" style="font-size:14px;" value="1.00" oninput="updateVal('m2', this.value)"></div>
-                    <div id="box-m3" class="input-box" onclick="setTarget('m3')"><span class="label">M3</span><input type="number" step="0.01" inputmode="decimal" id="val-m3" class="num-field" style="font-size:14px;" value="1.00" oninput="updateVal('m3', this.value)"></div>
+                    <div id="box-m1" class="input-box" onclick="setTarget('m1')"><span class="label">M1</span><input type="number" step="0.01" inputmode="decimal" id="val-m1" class="num-field" style="font-size:14px;" value="1.00" oninput="updateCombo()"></div>
+                    <div id="box-m2" class="input-box" onclick="setTarget('m2')"><span class="label">M2</span><input type="number" step="0.01" inputmode="decimal" id="val-m2" class="num-field" style="font-size:14px;" value="1.00" oninput="updateCombo()"></div>
+                    <div id="box-m3" class="input-box" onclick="setTarget('m3')"><span class="label">M3</span><input type="number" step="0.01" inputmode="decimal" id="val-m3" class="num-field" style="font-size:14px;" value="1.00" oninput="updateCombo()"></div>
                 </div>
-                <div class="selector-row">
-                    <button id="m-multi" style="grid-column: span 2" class="btn-sel active" onclick="setMode('multi')">MÚLTIPLA</button>
-                    <button id="m-build" style="grid-column: span 2" class="btn-sel" onclick="setMode('build')">BUILDER</button>
-                </div>
-                <button onclick="applyCombo()" style="width:100%; background:#25282c; border:1px solid #444; color:white; padding:10px; border-radius:8px; font-weight:800; font-size:10px; cursor:pointer;">APLICAR NA REFERÊNCIA</button>
             </div>
 
             <div class="selector-row">
-                <button id="k-2" class="btn-sel" onclick="setKelly(2)">1/2</button>
-                <button id="k-4" class="btn-sel active" onclick="setKelly(4)">1/4</button>
+                <button id="k-auto" class="btn-sel active" onclick="setKelly('auto')">AUTO</button>
+                <button id="k-4" class="btn-sel" onclick="setKelly(4)">1/4</button>
                 <button id="k-8" class="btn-sel" onclick="setKelly(8)">1/8</button>
                 <button id="k-10" class="btn-sel" onclick="setKelly(10)">1/10</button>
             </div>
@@ -330,7 +318,7 @@
 
     let currentTarget = 'fair';
     let values = { fair: '', bookie: '', m1: '1.00', m2: '1.00', m3: '1.00' };
-    let kellyDivisor = 4, mode = 'multi', historyData = [], myChart = null;
+    let kellyDivisor = 4, kellyMode = 'auto', historyData = [], myChart = null;
     let textToShare = "";
     let activeBookie = 'Betano';
     let currentEditingId = null;
@@ -380,16 +368,9 @@
         }
     }
 
-    // --- LÓGICA DE CAPTURA MELHORADA ---
     function parseBetData(rawText) {
-        // Limpeza de caracteres especiais/ícones antes de segmentar
         let cleanRaw = rawText.replace(/[|@#$_\[\]{}]/g, ' ');
-        
-        // Segmentação por linhas e limpeza de espaços extras
-        const rawLines = cleanRaw.split('\n')
-            .map(l => l.trim().toUpperCase())
-            .filter(l => l.length > 2);
-        
+        const rawLines = cleanRaw.split('\n').map(l => l.trim().toUpperCase()).filter(l => l.length > 2);
         const marketDict = {
             gols: ["OVER", "UNDER", "MAIS DE", "MENOS DE", "GOLS", "TOTAL", "2.5", "3.5", "1.5", "0.5"],
             ambas: ["AMBAS", "SIM", "NÃO", "MARCAM", "BTTS"],
@@ -398,164 +379,115 @@
             anytime: ["MARCAR", "JOGADOR", "ANYTIME", "MARCADOR", "PLAYER"],
             ml: ["VENCEDOR", "1X2", "RESULTADO FINAL", "DRAW NO BET", "DNB"]
         };
-
         const ignoreDict = ["BILHETE", "ID", "DATA", "HORA", "APOSTA", "VALOR", "CASH OUT", "ENCERRAR", "RETORNO", "ELITE", "PRO SCANNER", "TERMINAL", "LOGIN", "SALDO"];
         const tennisKeywords = ["ATP", "WTA", "ITF", "CHALLENGER", "OPEN", "SINGLES", "DOUBLES"];
-
-        let detectedMarkets = [];
-        let detectedOdd = "";
-        let potentialEvents = [];
+        let detectedMarkets = []; let detectedOdd = ""; let potentialEvents = [];
 
         rawLines.forEach((line, index) => {
-            // 1. Identificar Mercados
             let isMarket = false;
-            for (let category in marketDict) {
-                if (marketDict[category].some(keyword => line.includes(keyword))) {
-                    isMarket = true;
-                    break;
-                }
-            }
-            if (isMarket && !detectedMarkets.includes(line)) {
-                // Remove lixo comum de dentro da linha do mercado
-                let marketLine = line.replace(/[^A-Z0-9.+ ]/g, '').trim();
-                detectedMarkets.push(marketLine);
-            }
-
-            // 2. Identificar Odds (Formato decimal x.xx)
+            for (let category in marketDict) { if (marketDict[category].some(keyword => line.includes(keyword))) { isMarket = true; break; } }
+            if (isMarket && !detectedMarkets.includes(line)) { detectedMarkets.push(line.replace(/[^A-Z0-9.+ ]/g, '').trim()); }
             const oddMatch = line.match(/\b([1-9]\.\d{2})\b/);
             if (oddMatch && !detectedOdd) detectedOdd = oddMatch[1];
-
-            // 3. Identificar Eventos (Nova Heurística)
-            // Filtro A: Separadores clássicos
-            if (line.includes(" X ") || line.includes(" VS ") || line.includes(" - ") || line.includes(" @ ")) {
-                if (!potentialEvents.includes(line)) potentialEvents.push(line);
-            }
-            
-            // Filtro B: Tênis/Ligas (Linhas com palavras de Tênis geralmente são o evento ou a liga logo acima)
-            if (tennisKeywords.some(tk => line.includes(tk))) {
-                if (!potentialEvents.includes(line)) potentialEvents.push(line);
-            }
-
-            // Filtro C: Nomes Próprios (Linhas no topo sem números e sem palavras proibidas)
+            if (line.includes(" X ") || line.includes(" VS ") || line.includes(" - ") || line.includes(" @ ")) { potentialEvents.push(line); }
+            if (tennisKeywords.some(tk => line.includes(tk))) { potentialEvents.push(line); }
             if (index < 6 && !isMarket && !line.match(/\d/) && !ignoreDict.some(ig => line.includes(ig))) {
-                // Se a linha tem pelo menos duas palavras "grandes", chance alta de ser time/jogador
                 const words = line.split(' ').filter(w => w.length >= 3);
-                if (words.length >= 2 && !potentialEvents.includes(line)) {
-                    potentialEvents.push(line);
-                }
+                if (words.length >= 2) potentialEvents.push(line);
             }
         });
 
-        const eventInput = document.getElementById('input-evento');
-        const marketInput = document.getElementById('input-mercado');
-        const bookieOddInput = document.getElementById('val-bookie');
+        if (potentialEvents.length > 0) { document.getElementById('input-evento').value = (potentialEvents.find(e => e.includes(" X ") || e.includes(" VS ")) || potentialEvents[0]).trim(); }
+        if (detectedMarkets.length > 0) { document.getElementById('input-mercado').value = detectedMarkets.slice(0, 3).join(" + "); }
+        if (detectedOdd) { values.bookie = detectedOdd; document.getElementById('val-bookie').value = detectedOdd; calculate(); }
+    }
 
-        // Atribuição de Evento (Prioridade para quem tem separador 'X' ou 'VS')
-        if (potentialEvents.length > 0) {
-            const bestEvent = potentialEvents.find(e => e.includes(" X ") || e.includes(" VS ")) || potentialEvents[0];
-            eventInput.value = bestEvent.trim();
-        } else {
-            eventInput.value = (rawLines[0] && rawLines[0].length < 40) ? rawLines[0] : "";
-        }
-
-        // Atribuição de Mercado (Se for BetBuilder, concatena)
-        if (detectedMarkets.length > 0) {
-            marketInput.value = detectedMarkets.slice(0, 3).join(" + ");
-        }
-
-        // Atribuição de Odd
-        if (detectedOdd) {
-            bookieOddInput.value = detectedOdd;
-            values.bookie = detectedOdd;
+    // --- NOVO: CALCULADORA MÚLTIPLA EM TEMPO REAL ---
+    function updateCombo() {
+        const m1 = parseFloat(document.getElementById('val-m1').value) || 1;
+        const m2 = parseFloat(document.getElementById('val-m2').value) || 1;
+        const m3 = parseFloat(document.getElementById('val-m3').value) || 1;
+        
+        const res = (m1 * m2 * m3);
+        if(res > 1) {
+            values.fair = res.toFixed(2);
+            document.getElementById('val-fair').value = values.fair;
             calculate();
         }
     }
 
-    // --- FUNÇÕES DE INTERFACE ---
+    function calculate() {
+        const refOdd = parseFloat(values.fair), evalOdd = parseFloat(values.bookie);
+        const fairDisplay = document.getElementById('calc-fair-value'), resEl = document.getElementById('stake-res');
+        const evEl = document.getElementById('ev-res'), limEl = document.getElementById('limit-res');
+        
+        if(refOdd > 1) {
+            const calculatedFair = refOdd * 1.03; // Margem de 3%
+            fairDisplay.innerText = `@ ${calculatedFair.toFixed(2)}`;
+            limEl.innerText = `@ ${calculatedFair.toFixed(2)}`;
+
+            // --- NOVO: LÓGICA KELLY AUTOMÁTICO (ESTILO STAKE MATE) ---
+            if (kellyMode === 'auto') {
+                if (calculatedFair <= 2.20) kellyDivisor = 4;      // Odds Baixas (Simples)
+                else if (calculatedFair <= 4.00) kellyDivisor = 8; // Odds Médias (Múltiplas curtas)
+                else kellyDivisor = 15;                             // Odds Altas (Zebras/Múltiplas Longas)
+            }
+
+            if(evalOdd > 1) {
+                const ev = (evalOdd / calculatedFair) * 100; 
+                evEl.innerText = `${ev.toFixed(2)}%`;
+                if(ev > 100.00) {
+                    const p = 1 / calculatedFair, q = 1 - p, b_net = evalOdd - 1; 
+                    const fullKelly = (p * b_net - q) / b_net;
+                    let stakeUnits = (fullKelly * 100) / kellyDivisor;
+                    
+                    if (stakeUnits > 10.00) stakeUnits = 10.00;
+                    const roundedStake = Math.max(0, Math.round(stakeUnits * 4) / 4);
+                    resEl.innerText = roundedStake > 0 ? roundedStake.toFixed(2) + "u" : "VALOR BAIXO";
+                    resEl.style.color = roundedStake > 0 ? "var(--green)" : "var(--gold)";
+                } else { resEl.innerText = "SEM EDGE"; resEl.style.color = "var(--red)"; }
+            } else { resEl.innerText = "0.00u"; evEl.innerText = "0.00%"; }
+        } else { fairDisplay.innerText = "@ 0.00"; resEl.innerText = "0.00u"; evEl.innerText = "0.00%"; }
+    }
+
+    function setKelly(k) {
+        kellyMode = k;
+        document.querySelectorAll('[id^="k-"]').forEach(b => b.classList.remove('active'));
+        if (k === 'auto') {
+            document.getElementById('k-auto').classList.add('active');
+        } else {
+            document.getElementById('k-'+k).classList.add('active');
+            kellyDivisor = k;
+        }
+        calculate();
+    }
+
+    // --- FUNÇÕES DE INTERFACE RESTANTES ---
     function enableDragScroll(containerId) {
         const slider = document.getElementById(containerId);
         if(!slider) return;
         let isDown = false, startX, scrollLeft, startY, scrollTop;
-        slider.addEventListener('mousedown', (e) => {
-            isDown = true; startX = e.pageX - slider.offsetLeft; startY = e.pageY - slider.offsetTop;
-            scrollLeft = slider.scrollLeft; scrollTop = slider.scrollTop;
-        });
+        slider.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - slider.offsetLeft; startY = e.pageY - slider.offsetTop; scrollLeft = slider.scrollLeft; scrollTop = slider.scrollTop; });
         slider.addEventListener('mouseleave', () => isDown = false);
         slider.addEventListener('mouseup', () => isDown = false);
-        slider.addEventListener('mousemove', (e) => {
-            if (!isDown) return;
-            e.preventDefault();
-            const x = e.pageX - slider.offsetLeft; const y = e.pageY - slider.offsetTop;
-            slider.scrollLeft = scrollLeft - (x - startX) * 1.5;
-            slider.scrollTop = scrollTop - (y - startY) * 1.5;
-        });
+        slider.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; const y = e.pageY - slider.offsetTop; slider.scrollLeft = scrollLeft - (x - startX) * 1.5; slider.scrollTop = scrollTop - (y - startY) * 1.5; });
     }
 
-    window.onclick = function(event) {
-        if (!event.target.classList.contains('badge')) {
-            document.getElementById('quickStatusMenu').style.display = 'none';
-        }
-    }
+    window.onclick = function(event) { if (!event.target.classList.contains('badge')) { document.getElementById('quickStatusMenu').style.display = 'none'; } }
 
     document.addEventListener("DOMContentLoaded", function() {
-        enableDragScroll('bookie-slider');
-        enableDragScroll('table-scroll-container');
-        
-        // --- REGRA DE CLIQUE (1 CLIQUE EDITAR / 2 CLIQUES LIMPAR) ---
+        enableDragScroll('bookie-slider'); enableDragScroll('table-scroll-container');
         document.querySelectorAll('.num-field, .text-input').forEach(input => {
-            input.addEventListener('focus', function() {
-                let t = this.id.replace('val-', '');
-                if (values.hasOwnProperty(t)) {
-                    currentTarget = t;
-                    document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active'));
-                    let box = document.getElementById('box-'+t);
-                    if(box) box.classList.add('active');
-                }
-            });
-
-            input.addEventListener('dblclick', function() {
-                this.value = '';
-                let t = this.id.replace('val-', '');
-                if (values.hasOwnProperty(t)) {
-                    values[t] = '';
-                    calculate();
-                }
-            });
+            input.addEventListener('focus', function() { let t = this.id.replace('val-', ''); if (values.hasOwnProperty(t)) { currentTarget = t; document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active')); let box = document.getElementById('box-'+t); if(box) box.classList.add('active'); } });
+            input.addEventListener('dblclick', function() { this.value = ''; let t = this.id.replace('val-', ''); if (values.hasOwnProperty(t)) { values[t] = ''; if(t.startsWith('m')) values[t]='1.00'; calculate(); } });
         });
     });
 
-    function openStatusMenu(id, element) {
-        currentEditingId = id;
-        const menu = document.getElementById('quickStatusMenu');
-        const rect = element.getBoundingClientRect();
-        menu.style.display = 'flex';
-        menu.style.top = (rect.top + window.scrollY) + 'px';
-        menu.style.left = (rect.left - 150) + 'px'; 
-    }
-
-    function confirmStatus(status) {
-        if(!currentEditingId) return;
-        const b = historyData.find(x => x.id == currentEditingId);
-        b.status = status;
-        if(status === 'WIN') b.pl = (b.odd - 1) * b.stake;
-        else if(status === '1/2 WIN') b.pl = ((b.odd - 1) * b.stake) / 2;
-        else if(status === 'RED') b.pl = -b.stake;
-        else if(status === '1/2 RED') b.pl = -b.stake / 2;
-        else b.pl = 0;
-        db.child(currentEditingId).update(b);
-        document.getElementById('quickStatusMenu').style.display = 'none';
-    }
-
-    function setTarget(t) {
-        let input = document.getElementById('val-'+t);
-        if (input) input.focus();
-    }
+    function setTarget(t) { let input = document.getElementById('val-'+t); if (input) input.focus(); }
 
     function setBookie(name, el) {
         activeBookie = name;
-        document.querySelectorAll('.btn-bookie').forEach(btn => {
-            btn.classList.remove('active'); btn.style.borderColor = '#2d3035'; btn.style.color = 'var(--dim)';
-        });
+        document.querySelectorAll('.btn-bookie').forEach(btn => { btn.classList.remove('active'); btn.style.borderColor = '#2d3035'; btn.style.color = 'var(--dim)'; });
         el.classList.add('active'); el.style.borderColor = el.getAttribute('data-color'); el.style.color = '#fff';
     }
 
@@ -566,43 +498,10 @@
         if (key === 'DEL') values[currentTarget] = values[currentTarget].slice(0, -1);
         else values[currentTarget] += key;
         input.value = values[currentTarget];
-        calculate();
+        if(currentTarget.startsWith('m')) updateCombo(); else calculate();
     }
 
     function toggleNumpad() { document.getElementById('numpad-control').classList.toggle('visible'); }
-
-    function calculate() {
-        const refOdd = parseFloat(values.fair), evalOdd = parseFloat(values.bookie);
-        const fairDisplay = document.getElementById('calc-fair-value'), resEl = document.getElementById('stake-res');
-        const evEl = document.getElementById('ev-res'), limEl = document.getElementById('limit-res');
-        if(refOdd > 1) {
-            const calculatedFair = refOdd * 1.03;
-            fairDisplay.innerText = `@ ${calculatedFair.toFixed(2)}`;
-            limEl.innerText = `@ ${calculatedFair.toFixed(2)}`;
-            if(evalOdd > 1) {
-                const ev = (evalOdd / calculatedFair) * 100; 
-                evEl.innerText = `${ev.toFixed(2)}%`;
-                if(ev > 100.00) {
-                    const p = 1 / calculatedFair, q = 1 - p, b_net = evalOdd - 1; 
-                    const fullKelly = (p * b_net - q) / b_net;
-                    let stakeUnits = (fullKelly * 100) / kellyDivisor;
-                    if (stakeUnits > 10.00) stakeUnits = 10.00;
-                    const roundedStake = Math.max(0, Math.round(stakeUnits * 4) / 4);
-                    resEl.innerText = roundedStake > 0 ? roundedStake.toFixed(2) + "u" : "VALOR BAIXO";
-                    resEl.style.color = roundedStake > 0 ? "var(--green)" : "var(--gold)";
-                } else { resEl.innerText = "SEM EDGE"; resEl.style.color = "var(--red)"; }
-            } else { resEl.innerText = "0.00u"; evEl.innerText = "0.00%"; }
-        } else { fairDisplay.innerText = "@ 0.00"; resEl.innerText = "0.00u"; evEl.innerText = "0.00%"; }
-    }
-
-    function applyCombo() {
-        const v1 = parseFloat(values.m1)||1, v2 = parseFloat(values.m2)||1, v3 = parseFloat(values.m3)||1;
-        let res = v1 * v2 * v3;
-        if(mode === 'build') res *= 0.85;
-        values.fair = res.toFixed(2);
-        document.getElementById('val-fair').value = values.fair;
-        calculate(); setTarget('bookie');
-    }
 
     function addBet() {
         const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
@@ -612,52 +511,26 @@
         const id = Date.now().toString();
         db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: evt, mercado: mkt, bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
         values = { fair: '', bookie: '', m1: '1.00', m2: '1.00', m3: '1.00' };
-        ['fair','bookie','m1','m2','m3'].forEach(k => { 
-            let el = document.getElementById('val-'+k);
-            if(el) el.value = (k.startsWith('m')?'1.00':''); 
-        });
-        document.getElementById('input-evento').value = ''; 
-        document.getElementById('input-mercado').value = '';
+        ['fair','bookie','m1','m2','m3'].forEach(k => { let el = document.getElementById('val-'+k); if(el) el.value = (k.startsWith('m')?'1.00':''); });
+        document.getElementById('input-evento').value = ''; document.getElementById('input-mercado').value = '';
         calculate(); setTarget('fair');
     }
 
     db.on('value', snap => {
-        const statusEl = document.getElementById('cloud-status');
-        statusEl.innerText = "NUVEM ATIVA"; statusEl.style.color = "var(--green)";
-        const val = snap.val();
-        historyData = val ? Object.values(val).sort((a,b) => b.timestamp - a.timestamp) : [];
+        const statusEl = document.getElementById('cloud-status'); statusEl.innerText = "NUVEM ATIVA"; statusEl.style.color = "var(--green)";
+        const val = snap.val(); historyData = val ? Object.values(val).sort((a,b) => b.timestamp - a.timestamp) : [];
         renderStats();
     });
 
     function renderStats() {
         const tb = document.getElementById('history-table'); if(!tb) return;
-        tb.innerHTML = '';
-        let totalPL = 0, invest = 0, todayPL = 0, weekPL = 0, monthPL = 0;
-        const now = Date.now();
+        tb.innerHTML = ''; let totalPL = 0, invest = 0, todayPL = 0, weekPL = 0, monthPL = 0; const now = Date.now();
         historyData.forEach(b => {
-            totalPL += b.pl; 
-            if(b.status!=='WAIT' && b.status!=='VOID') invest += b.stake;
+            totalPL += b.pl; if(b.status!=='WAIT' && b.status!=='VOID') invest += b.stake;
             const diffDays = (now - b.timestamp) / (1000 * 60 * 60 * 24);
-            if(diffDays <= 1) todayPL += b.pl;
-            if(diffDays <= 7) weekPL += b.pl;
-            if(diffDays <= 30) monthPL += b.pl;
-            let cls = 'b-wait';
-            if(b.status.includes('WIN')) cls = 'b-win';
-            else if(b.status.includes('RED')) cls = 'b-red';
-            else if(b.status === 'VOID') cls = 'b-void';
-            tb.innerHTML += `<tr>
-                <td style="width:25px"><button class="btn-share-row" onclick="shareHistoryBet('${b.id}')">📲</button></td>
-                <td>
-                    <div style="color:var(--accent); font-size:9px; font-weight:800;">[${b.bookie}]</div>
-                    <div style="color:white; font-weight:bold; font-size:11px;">${b.evento || b.date}</div>
-                    <div style="color:var(--gold); font-size:10px; font-weight:800; margin-top:2px;">${b.mercado || 'MERCADO EM ABERTO'}</div>
-                </td>
-                <td style="text-align:center">@${b.odd.toFixed(2)}</td>
-                <td style="text-align:center">${b.stake.toFixed(2)}u</td>
-                <td style="color:${b.pl>=0?'var(--green)':'var(--red)'}">${b.pl.toFixed(2)}</td>
-                <td><span class="badge ${cls}" onclick="openStatusMenu('${b.id}', this)">${b.status}</span></td>
-                <td><button class="btn-del" onclick="deleteBet('${b.id}')">×</button></td>
-            </tr>`;
+            if(diffDays <= 1) todayPL += b.pl; if(diffDays <= 7) weekPL += b.pl; if(diffDays <= 30) monthPL += b.pl;
+            let cls = 'b-wait'; if(b.status.includes('WIN')) cls = 'b-win'; else if(b.status.includes('RED')) cls = 'b-red'; else if(b.status === 'VOID') cls = 'b-void';
+            tb.innerHTML += `<tr><td style="width:25px"><button class="btn-share-row" onclick="shareHistoryBet('${b.id}')">📲</button></td><td><div style="color:var(--accent); font-size:9px; font-weight:800;">[${b.bookie}]</div><div style="color:white; font-weight:bold; font-size:11px;">${b.evento || b.date}</div><div style="color:var(--gold); font-size:10px; font-weight:800; margin-top:2px;">${b.mercado || 'MERCADO EM ABERTO'}</div></td><td style="text-align:center">@${b.odd.toFixed(2)}</td><td style="text-align:center">${b.stake.toFixed(2)}u</td><td style="color:${b.pl>=0?'var(--green)':'var(--red)'}">${b.pl.toFixed(2)}</td><td><span class="badge ${cls}" onclick="openStatusMenu('${b.id}', this)">${b.status}</span></td><td><button class="btn-del" onclick="deleteBet('${b.id}')">×</button></td></tr>`;
         });
         document.getElementById('stat-pl').innerText = totalPL.toFixed(2)+'u';
         document.getElementById('stat-roi').innerText = (invest>0?(totalPL/invest*100):0).toFixed(1)+'%';
@@ -672,82 +545,22 @@
     function updateChart() {
         const ctx = document.getElementById('profitChart').getContext('2d');
         const chartData = [...historyData].reverse();
-        let labels = [], dataPoints = [], accum = 0;
-        chartData.forEach(b => { labels.push(b.date); accum += b.pl; dataPoints.push(accum); });
+        let labels = [], dataPoints = [], accum = 0; chartData.forEach(b => { labels.push(b.date); accum += b.pl; dataPoints.push(accum); });
         if (myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: labels, datasets: [{ label: 'PL', data: dataPoints, borderColor: '#9d7df2', fill: true, tension: 0.3, backgroundColor: 'rgba(157,125,242,0.1)' }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#222' } } } }
-        });
+        myChart = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [{ label: 'PL', data: dataPoints, borderColor: '#9d7df2', fill: true, tension: 0.3, backgroundColor: 'rgba(157,125,242,0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#222' } } } } });
     }
 
-    function shareAllHousesReport() {
-        if(historyData.length === 0) return alert("Sem dados.");
-        let houses = {};
-        historyData.forEach(b => {
-            if(!houses[b.bookie]) houses[b.bookie] = {pl: 0, inv: 0, count: 0};
-            houses[b.bookie].pl += b.pl;
-            houses[b.bookie].count++;
-            if(b.status!=='WAIT' && b.status!=='VOID') houses[b.bookie].inv += b.stake;
-        });
-        let msg = "📂 *RESUMO POR CASAS - ELITE*\n\n";
-        for(let h in houses) {
-            let yield = houses[h].inv > 0 ? (houses[h].pl/houses[h].inv*100).toFixed(1) : "0.0";
-            let emoji = houses[h].pl >= 0 ? "✅" : "❌";
-            msg += `${emoji} *${h.toUpperCase()}*\n• Lucro: ${houses[h].pl.toFixed(2)}u\n• Yield: ${yield}%\n• Total: ${houses[h].count} bets\n\n`;
-        }
-        textToShare = msg + "_Gerado por Elite V14.8_";
-        document.getElementById('shareOverlay').style.display = 'flex';
-    }
-
-    function shareCurrentBet() {
-        const evt = document.getElementById('input-evento').value || '---';
-        const mkt = document.getElementById('input-mercado').value || '---';
-        const odd = values.bookie || '0.00';
-        const stk = document.getElementById('stake-res').innerText;
-        textToShare = `🚀 *SINAL ELITE PRO*\n🏟️ *${evt.toUpperCase()}*\n📌 Mercado: ${mkt.toUpperCase()}\n🏠 Casa: ${activeBookie}\n🏆 Odd: @${odd}\n💰 Stake Sugerida: ${stk}`;
-        document.getElementById('shareOverlay').style.display = 'flex';
-    }
-
-    function sharePerformanceReport() {
-        const pl = document.getElementById('stat-pl').innerText;
-        const roi = document.getElementById('stat-roi').innerText;
-        const count = document.getElementById('stat-count-total').innerText;
-        textToShare = `📊 *RELATÓRIO DE PERFORMANCE*\n✅ Total de Bets: ${count}\n💰 Lucro Total: ${pl}\n📈 Yield/ROI: ${roi}\n\n_Gerado por Elite V14.8 Terminal_`;
-        document.getElementById('shareOverlay').style.display = 'flex';
-    }
-
-    function shareHistoryBet(id) {
-        const b = historyData.find(x => x.id == id);
-        textToShare = `🔥 *REGISTRO ELITE*\n🏟️ *${b.evento}*\n📌 Mercado: ${b.mercado}\n🏠 Casa: ${b.bookie}\n🏆 Odd: @${b.odd.toFixed(2)}\n💰 Stake: ${b.stake.toFixed(2)}u\n📊 Status: ${b.status}`;
-        document.getElementById('shareOverlay').style.display = 'flex';
-    }
-
-    function sendTo(dest) {
-        const encoded = encodeURIComponent(textToShare);
-        if (dest === 'wa') window.open(`https://wa.me/?text=${encoded}`, '_blank');
-        else if (dest === 'tg') window.open(`https://t.me/share/url?url=&text=${encoded}`, '_blank');
-        else if (dest === 'copy') { navigator.clipboard.writeText(textToShare); alert("Copiado!"); }
-        closeShare();
-    }
-
-    function setMode(m) { mode = m; document.getElementById('m-multi').classList.toggle('active', m==='multi'); document.getElementById('m-build').classList.toggle('active', m==='build'); calculate(); }
-    function setKelly(k) { kellyDivisor = k; document.querySelectorAll('[id^="k-"]').forEach(b => b.classList.remove('active')); document.getElementById('k-'+k).classList.add('active'); calculate(); }
+    function openStatusMenu(id, element) { currentEditingId = id; const menu = document.getElementById('quickStatusMenu'); const rect = element.getBoundingClientRect(); menu.style.display = 'flex'; menu.style.top = (rect.top + window.scrollY) + 'px'; menu.style.left = (rect.left - 150) + 'px'; }
+    function confirmStatus(status) { if(!currentEditingId) return; const b = historyData.find(x => x.id == currentEditingId); b.status = status; if(status === 'WIN') b.pl = (b.odd - 1) * b.stake; else if(status === '1/2 WIN') b.pl = ((b.odd - 1) * b.stake) / 2; else if(status === 'RED') b.pl = -b.stake; else if(status === '1/2 RED') b.pl = -b.stake / 2; else b.pl = 0; db.child(currentEditingId).update(b); document.getElementById('quickStatusMenu').style.display = 'none'; }
     function deleteBet(id) { if(confirm("Excluir registro?")) db.child(id).remove(); }
     function clearAll() { if(confirm("LIMPAR TODO O HISTÓRICO?")) db.set(null); }
     function closeShare() { document.getElementById('shareOverlay').style.display = 'none'; }
-    
-    function exportData() {
-        if(historyData.length === 0) return;
-        let csv = "Data,Evento,Mercado,Casa,Odd,Stake,PL,Status\n";
-        historyData.forEach(b => { csv += `${b.date},${b.evento},${b.mercado},${b.bookie},${b.odd},${b.stake},${b.pl},${b.status}\n`; });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('hidden', ''); a.setAttribute('href', url); a.setAttribute('download', 'historico_elite.csv');
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    }
+
+    function sendTo(dest) { const encoded = encodeURIComponent(textToShare); if (dest === 'wa') window.open(`https://wa.me/?text=${encoded}`, '_blank'); else if (dest === 'tg') window.open(`https://t.me/share/url?url=&text=${encoded}`, '_blank'); else if (dest === 'copy') { navigator.clipboard.writeText(textToShare); alert("Copiado!"); } closeShare(); }
+    function sharePerformanceReport() { const pl = document.getElementById('stat-pl').innerText; const roi = document.getElementById('stat-roi').innerText; const count = document.getElementById('stat-count-total').innerText; textToShare = `📊 *RELATÓRIO DE PERFORMANCE*\n✅ Total de Bets: ${count}\n💰 Lucro Total: ${pl}\n📈 Yield/ROI: ${roi}\n\n_Gerado por Elite V14.8 Terminal_`; document.getElementById('shareOverlay').style.display = 'flex'; }
+    function shareCurrentBet() { const evt = document.getElementById('input-evento').value || '---'; const mkt = document.getElementById('input-mercado').value || '---'; const odd = values.bookie || '0.00'; const stk = document.getElementById('stake-res').innerText; textToShare = `🚀 *SINAL ELITE PRO*\n🏟️ *${evt.toUpperCase()}*\n📌 Mercado: ${mkt.toUpperCase()}\n🏠 Casa: ${activeBookie}\n🏆 Odd: @${odd}\n💰 Stake Sugerida: ${stk}`; document.getElementById('shareOverlay').style.display = 'flex'; }
+    function shareHistoryBet(id) { const b = historyData.find(x => x.id == id); textToShare = `🔥 *REGISTRO ELITE*\n🏟️ *${b.evento}*\n📌 Mercado: ${b.mercado}\n🏠 Casa: ${b.bookie}\n🏆 Odd: @${b.odd.toFixed(2)}\n💰 Stake: ${b.stake.toFixed(2)}u\n📊 Status: ${b.status}`; document.getElementById('shareOverlay').style.display = 'flex'; }
+    function exportData() { if(historyData.length === 0) return; let csv = "Data,Evento,Mercado,Casa,Odd,Stake,PL,Status\n"; historyData.forEach(b => { csv += `${b.date},${b.evento},${b.mercado},${b.bookie},${b.odd},${b.stake},${b.pl},${b.status}\n`; }); const blob = new Blob([csv], { type: 'text/csv' }); const url = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.setAttribute('hidden', ''); a.setAttribute('href', url); a.setAttribute('download', 'historico_elite.csv'); document.body.appendChild(a); a.click(); document.body.removeChild(a); }
 </script>
 </body>
 </html>
