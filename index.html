@@ -61,6 +61,13 @@
         
         .label { font-size: 8px; color: var(--dim); font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; text-transform: uppercase; pointer-events: none; }
         
+        .mode-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .btn-mode { 
+            background: #1a1c20; border: 1px solid #333; color: var(--dim); padding: 8px; 
+            border-radius: 6px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase;
+        }
+        .btn-mode.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
         .fair-display-box { 
             background: rgba(157,125,242,0.05); border: 1px dashed var(--accent); 
             padding: 10px; border-radius: 12px; margin-bottom: 12px; text-align: center;
@@ -212,12 +219,18 @@
             </div>
 
             <div class="fair-display-box">
-                <span class="label" style="color:var(--accent)">Odd Justa (+3% Margem)</span>
+                <span class="label" style="color:var(--accent)">Odd Justa (+3.5% Margem)</span>
                 <div id="calc-fair-value" style="font-family:'JetBrains Mono'; font-size:22px; font-weight:bold; color:#fff;">@ 0.00</div>
             </div>
 
             <div style="background:#111315; padding:12px; border-radius:12px; margin-bottom:15px; border: 1px solid #222;">
-                <span class="label" style="text-align:center; margin-bottom:8px;">Calculadora de Múltipla (Auto-Update)</span>
+                <span class="label" style="text-align:center; margin-bottom:10px;">Calculadora Pinnacle (Auto-Update)</span>
+                
+                <div class="mode-selector">
+                    <button id="mode-multi" class="btn-mode active" onclick="setMode('MULTI')">Múltipla</button>
+                    <button id="mode-bb" class="btn-mode" onclick="setMode('BB')">BetBuilder</button>
+                </div>
+
                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
                     <div id="box-m1" class="input-box" onclick="setTarget('m1')"><span class="label">M1</span><input type="number" step="0.01" inputmode="decimal" id="val-m1" class="num-field" style="font-size:14px;" value="1.00" oninput="updateCombo()"></div>
                     <div id="box-m2" class="input-box" onclick="setTarget('m2')"><span class="label">M2</span><input type="number" step="0.01" inputmode="decimal" id="val-m2" class="num-field" style="font-size:14px;" value="1.00" oninput="updateCombo()"></div>
@@ -226,14 +239,16 @@
             </div>
 
             <div class="selector-row">
-                <button id="k-auto" class="btn-sel active" onclick="setKelly('auto')">AUTO</button>
+                <button id="k-auto" class="btn-sel" onclick="setKelly('auto')">AUTO</button>
                 <button id="k-4" class="btn-sel" onclick="setKelly(4)">1/4</button>
                 <button id="k-8" class="btn-sel" onclick="setKelly(8)">1/8</button>
-                <button id="k-10" class="btn-sel" onclick="setKelly(10)">1/10</button>
+                <button id="k-10" class="btn-sel active" onclick="setKelly(10)">1/10</button>
             </div>
 
             <div style="text-align:center; margin:15px 0; padding:15px; background:#000; border-radius:12px; border: 1px solid #2d3035;">
                 <div id="stake-res" style="font-family:'JetBrains Mono'; font-size:36px; font-weight:bold; color:var(--dim);">0.00u</div>
+                <div id="algo-log" style="font-size: 9px; color: var(--accent); margin-top: 5px; font-family: 'JetBrains Mono'; text-transform: uppercase;">AGUARDANDO DADOS...</div>
+
                 <div style="display:flex; justify-content: space-between; margin-top:10px; border-top:1px solid #222; padding-top:10px;">
                     <div style="text-align:left">
                         <span class="label">LUCRO EXP. (EV)</span>
@@ -304,6 +319,7 @@
 </div>
 
 <script>
+    // Firebase Config (IDÊNTICO AO SEU ORIGINAL)
     const firebaseConfig = {
         apiKey: "AIzaSyA7trGWz9RnvuKrK2MULn6YYlu86dBJFdU",
         authDomain: "eliteterminal-2e66e.firebaseapp.com",
@@ -317,16 +333,23 @@
     const db = firebase.database().ref('elite_user_data');
 
     let currentTarget = 'fair';
+    let currentMode = 'MULTI'; 
     let values = { fair: '', bookie: '', m1: '1.00', m2: '1.00', m3: '1.00' };
-    let kellyDivisor = 4, kellyMode = 'auto', historyData = [], myChart = null;
+    
+    // APLICAÇÃO DA GESTÃO RECOMENDADA: Iniciando em 1/10 (Fração Profissional)
+    let kellyDivisor = 10, kellyMode = 10, historyData = [], myChart = null;
     let textToShare = "";
     let activeBookie = 'Betano';
     let currentEditingId = null;
 
-    // --- OCR E PASTE LISTENERS ---
-    function triggerFileSelect() {
-        document.getElementById('ocr-upload').click();
+    function setMode(m) {
+        currentMode = m;
+        document.getElementById('mode-multi').classList.toggle('active', m === 'MULTI');
+        document.getElementById('mode-bb').classList.toggle('active', m === 'BB');
+        updateCombo(); 
     }
+
+    function triggerFileSelect() { document.getElementById('ocr-upload').click(); }
 
     document.addEventListener('paste', async (e) => {
         const items = e.clipboardData.items;
@@ -344,14 +367,8 @@
         btn.innerText = "⌛ LENDO TEXTO...";
         btn.style.borderColor = "var(--gold)";
         btn.style.color = "var(--gold)";
-
         try {
-            const { data: { text } } = await Tesseract.recognize(
-                file,
-                'por',
-                { logger: m => console.log(m) }
-            );
-
+            const { data: { text } } = await Tesseract.recognize(file, 'por', { logger: m => console.log(m) });
             parseBetData(text);
             btn.innerText = "✅ SCAN CONCLUÍDO";
             btn.style.borderColor = "var(--green)";
@@ -361,7 +378,6 @@
                 btn.style.borderColor = "var(--accent)";
                 btn.style.color = "var(--accent)";
             }, 3000);
-
         } catch (e) {
             alert("Erro ao ler imagem.");
             btn.innerText = "❌ ERRO NO SCAN";
@@ -371,18 +387,9 @@
     function parseBetData(rawText) {
         let cleanRaw = rawText.replace(/[|@#$_\[\]{}]/g, ' ');
         const rawLines = cleanRaw.split('\n').map(l => l.trim().toUpperCase()).filter(l => l.length > 2);
-        const marketDict = {
-            gols: ["OVER", "UNDER", "MAIS DE", "MENOS DE", "GOLS", "TOTAL", "2.5", "3.5", "1.5", "0.5"],
-            ambas: ["AMBAS", "SIM", "NÃO", "MARCAM", "BTTS"],
-            cantos: ["ESCANTEIOS", "CANTOS", "CORNERS", "ANGULARES"],
-            cartoes: ["CARTÃO", "CARTÕES", "CARD", "VERMELHO", "AMARELO"],
-            anytime: ["MARCAR", "JOGADOR", "ANYTIME", "MARCADOR", "PLAYER"],
-            ml: ["VENCEDOR", "1X2", "RESULTADO FINAL", "DRAW NO BET", "DNB"]
-        };
+        const marketDict = { gols: ["OVER", "UNDER", "MAIS DE", "MENOS DE", "GOLS", "TOTAL", "2.5", "3.5", "1.5", "0.5"], ambas: ["AMBAS", "SIM", "NÃO", "MARCAM", "BTTS"], cantos: ["ESCANTEIOS", "CANTOS", "CORNERS", "ANGULARES"], cartoes: ["CARTÃO", "CARTÕES", "CARD", "VERMELHO", "AMARELO"], anytime: ["MARCAR", "JOGADOR", "ANYTIME", "MARCADOR", "PLAYER"], ml: ["VENCEDOR", "1X2", "RESULTADO FINAL", "DRAW NO BET", "DNB"] };
         const ignoreDict = ["BILHETE", "ID", "DATA", "HORA", "APOSTA", "VALOR", "CASH OUT", "ENCERRAR", "RETORNO", "ELITE", "PRO SCANNER", "TERMINAL", "LOGIN", "SALDO"];
-        const tennisKeywords = ["ATP", "WTA", "ITF", "CHALLENGER", "OPEN", "SINGLES", "DOUBLES"];
         let detectedMarkets = []; let detectedOdd = ""; let potentialEvents = [];
-
         rawLines.forEach((line, index) => {
             let isMarket = false;
             for (let category in marketDict) { if (marketDict[category].some(keyword => line.includes(keyword))) { isMarket = true; break; } }
@@ -390,27 +397,37 @@
             const oddMatch = line.match(/\b([1-9]\.\d{2})\b/);
             if (oddMatch && !detectedOdd) detectedOdd = oddMatch[1];
             if (line.includes(" X ") || line.includes(" VS ") || line.includes(" - ") || line.includes(" @ ")) { potentialEvents.push(line); }
-            if (tennisKeywords.some(tk => line.includes(tk))) { potentialEvents.push(line); }
             if (index < 6 && !isMarket && !line.match(/\d/) && !ignoreDict.some(ig => line.includes(ig))) {
                 const words = line.split(' ').filter(w => w.length >= 3);
                 if (words.length >= 2) potentialEvents.push(line);
             }
         });
-
         if (potentialEvents.length > 0) { document.getElementById('input-evento').value = (potentialEvents.find(e => e.includes(" X ") || e.includes(" VS ")) || potentialEvents[0]).trim(); }
         if (detectedMarkets.length > 0) { document.getElementById('input-mercado').value = detectedMarkets.slice(0, 3).join(" + "); }
         if (detectedOdd) { values.bookie = detectedOdd; document.getElementById('val-bookie').value = detectedOdd; calculate(); }
     }
 
-    // --- NOVO: CALCULADORA MÚLTIPLA EM TEMPO REAL ---
     function updateCombo() {
         const m1 = parseFloat(document.getElementById('val-m1').value) || 1;
         const m2 = parseFloat(document.getElementById('val-m2').value) || 1;
         const m3 = parseFloat(document.getElementById('val-m3').value) || 1;
         
-        const res = (m1 * m2 * m3);
-        if(res > 1) {
-            values.fair = res.toFixed(2);
+        const clean = (o) => o > 1 ? o * 1.035 : 1;
+        let justaCombinada = (clean(m1) * clean(m2) * clean(m3));
+
+        let selecoesValidas = 0;
+        if(m1 > 1) selecoesValidas++;
+        if(m2 > 1) selecoesValidas++;
+        if(m3 > 1) selecoesValidas++;
+
+        // APLICAÇÃO DA LÓGICA DE CORRELAÇÃO EXCLUSIVA PARA BB
+        if (currentMode === 'BB' && selecoesValidas > 1) {
+            justaCombinada = justaCombinada * 0.85; 
+        }
+
+        if(justaCombinada > 1) {
+            const refSintetica = justaCombinada / 1.035;
+            values.fair = refSintetica.toFixed(2);
             document.getElementById('val-fair').value = values.fair;
             calculate();
         }
@@ -419,18 +436,18 @@
     function calculate() {
         const refOdd = parseFloat(values.fair), evalOdd = parseFloat(values.bookie);
         const fairDisplay = document.getElementById('calc-fair-value'), resEl = document.getElementById('stake-res');
-        const evEl = document.getElementById('ev-res'), limEl = document.getElementById('limit-res');
+        const evEl = document.getElementById('ev-res'), limEl = document.getElementById('limit-res'), logEl = document.getElementById('algo-log');
         
         if(refOdd > 1) {
-            const calculatedFair = refOdd * 1.03; // Margem de 3%
+            const calculatedFair = refOdd * 1.035; 
             fairDisplay.innerText = `@ ${calculatedFair.toFixed(2)}`;
             limEl.innerText = `@ ${calculatedFair.toFixed(2)}`;
 
-            // --- NOVO: LÓGICA KELLY AUTOMÁTICO (ESTILO STAKE MATE) ---
+            // KELLY AUTO SUAVIZADO PARA PROTEÇÃO DE BANCA
             if (kellyMode === 'auto') {
-                if (calculatedFair <= 2.20) kellyDivisor = 4;      // Odds Baixas (Simples)
-                else if (calculatedFair <= 4.00) kellyDivisor = 8; // Odds Médias (Múltiplas curtas)
-                else kellyDivisor = 15;                             // Odds Altas (Zebras/Múltiplas Longas)
+                if (calculatedFair <= 2.10) kellyDivisor = 6;      
+                else if (calculatedFair <= 3.80) kellyDivisor = 12; 
+                else kellyDivisor = 18;                             
             }
 
             if(evalOdd > 1) {
@@ -441,35 +458,43 @@
                     const fullKelly = (p * b_net - q) / b_net;
                     let stakeUnits = (fullKelly * 100) / kellyDivisor;
                     
-                    if (stakeUnits > 10.00) stakeUnits = 10.00;
+                    // TRAVA DE SEGURANÇA: MÁXIMO 2.5u POR ENTRADA
+                    if (stakeUnits > 2.50) {
+                        stakeUnits = 2.50;
+                        logEl.innerText = "ALGO: LIMITADO AO TETO (MAX 2.5u)";
+                    } else {
+                        logEl.innerText = currentMode === 'BB' ? "ALGO: BB ATIVO (15% OFF)" : "ALGO: MULTIPLA (PURA)";
+                    }
+
                     const roundedStake = Math.max(0, Math.round(stakeUnits * 4) / 4);
-                    resEl.innerText = roundedStake > 0 ? roundedStake.toFixed(2) + "u" : "VALOR BAIXO";
-                    resEl.style.color = roundedStake > 0 ? "var(--green)" : "var(--gold)";
-                } else { resEl.innerText = "SEM EDGE"; resEl.style.color = "var(--red)"; }
-            } else { resEl.innerText = "0.00u"; evEl.innerText = "0.00%"; }
-        } else { fairDisplay.innerText = "@ 0.00"; resEl.innerText = "0.00u"; evEl.innerText = "0.00%"; }
+                    resEl.innerText = roundedStake.toFixed(2) + "u";
+                    resEl.style.color = "var(--green)";
+                    
+                } else { 
+                    resEl.innerText = "SEM EDGE"; resEl.style.color = "var(--red)"; 
+                    logEl.innerText = "ODD ABAIXO DO VALOR JUSTO";
+                }
+            }
+        }
     }
 
-    function setKelly(k) {
-        kellyMode = k;
-        document.querySelectorAll('[id^="k-"]').forEach(b => b.classList.remove('active'));
+    function setKelly(k) { 
+        kellyMode = k; 
+        document.querySelectorAll('[id^="k-"]').forEach(b => b.classList.remove('active')); 
         if (k === 'auto') {
             document.getElementById('k-auto').classList.add('active');
         } else {
-            document.getElementById('k-'+k).classList.add('active');
-            kellyDivisor = k;
+            document.getElementById('k-'+k).classList.add('active'); 
+            kellyDivisor = k; 
         }
-        calculate();
+        calculate(); 
     }
 
-    // --- FUNÇÕES DE INTERFACE RESTANTES ---
     function enableDragScroll(containerId) {
-        const slider = document.getElementById(containerId);
-        if(!slider) return;
+        const slider = document.getElementById(containerId); if(!slider) return;
         let isDown = false, startX, scrollLeft, startY, scrollTop;
         slider.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - slider.offsetLeft; startY = e.pageY - slider.offsetTop; scrollLeft = slider.scrollLeft; scrollTop = slider.scrollTop; });
-        slider.addEventListener('mouseleave', () => isDown = false);
-        slider.addEventListener('mouseup', () => isDown = false);
+        slider.addEventListener('mouseleave', () => isDown = false); slider.addEventListener('mouseup', () => isDown = false);
         slider.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; const y = e.pageY - slider.offsetTop; slider.scrollLeft = scrollLeft - (x - startX) * 1.5; slider.scrollTop = scrollTop - (y - startY) * 1.5; });
     }
 
@@ -481,6 +506,9 @@
             input.addEventListener('focus', function() { let t = this.id.replace('val-', ''); if (values.hasOwnProperty(t)) { currentTarget = t; document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active')); let box = document.getElementById('box-'+t); if(box) box.classList.add('active'); } });
             input.addEventListener('dblclick', function() { this.value = ''; let t = this.id.replace('val-', ''); if (values.hasOwnProperty(t)) { values[t] = ''; if(t.startsWith('m')) values[t]='1.00'; calculate(); } });
         });
+        
+        // Garantindo que inicia em 1/10
+        setKelly(10);
     });
 
     function setTarget(t) { let input = document.getElementById('val-'+t); if (input) input.focus(); }
@@ -506,14 +534,9 @@
     function addBet() {
         const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
         if(!b || isNaN(s) || s <= 0) return;
-        const evt = document.getElementById('input-evento').value.toUpperCase() || 'EVENTO';
-        const mkt = document.getElementById('input-mercado').value.toUpperCase() || 'MERCADO';
         const id = Date.now().toString();
-        db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: evt, mercado: mkt, bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
-        values = { fair: '', bookie: '', m1: '1.00', m2: '1.00', m3: '1.00' };
-        ['fair','bookie','m1','m2','m3'].forEach(k => { let el = document.getElementById('val-'+k); if(el) el.value = (k.startsWith('m')?'1.00':''); });
-        document.getElementById('input-evento').value = ''; document.getElementById('input-mercado').value = '';
-        calculate(); setTarget('fair');
+        db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: document.getElementById('input-evento').value.toUpperCase()||'EVENTO', mercado: document.getElementById('input-mercado').value.toUpperCase()||'MERCADO', bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
+        location.reload();
     }
 
     db.on('value', snap => {
@@ -555,7 +578,6 @@
     function deleteBet(id) { if(confirm("Excluir registro?")) db.child(id).remove(); }
     function clearAll() { if(confirm("LIMPAR TODO O HISTÓRICO?")) db.set(null); }
     function closeShare() { document.getElementById('shareOverlay').style.display = 'none'; }
-
     function sendTo(dest) { const encoded = encodeURIComponent(textToShare); if (dest === 'wa') window.open(`https://wa.me/?text=${encoded}`, '_blank'); else if (dest === 'tg') window.open(`https://t.me/share/url?url=&text=${encoded}`, '_blank'); else if (dest === 'copy') { navigator.clipboard.writeText(textToShare); alert("Copiado!"); } closeShare(); }
     function sharePerformanceReport() { const pl = document.getElementById('stat-pl').innerText; const roi = document.getElementById('stat-roi').innerText; const count = document.getElementById('stat-count-total').innerText; textToShare = `📊 *RELATÓRIO DE PERFORMANCE*\n✅ Total de Bets: ${count}\n💰 Lucro Total: ${pl}\n📈 Yield/ROI: ${roi}\n\n_Gerado por Elite V14.8 Terminal_`; document.getElementById('shareOverlay').style.display = 'flex'; }
     function shareCurrentBet() { const evt = document.getElementById('input-evento').value || '---'; const mkt = document.getElementById('input-mercado').value || '---'; const odd = values.bookie || '0.00'; const stk = document.getElementById('stake-res').innerText; textToShare = `🚀 *SINAL ELITE PRO*\n🏟️ *${evt.toUpperCase()}*\n📌 Mercado: ${mkt.toUpperCase()}\n🏠 Casa: ${activeBookie}\n🏆 Odd: @${odd}\n💰 Stake Sugerida: ${stk}`; document.getElementById('shareOverlay').style.display = 'flex'; }
