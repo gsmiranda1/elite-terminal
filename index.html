@@ -61,13 +61,6 @@
         
         .label { font-size: 8px; color: var(--dim); font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; text-transform: uppercase; pointer-events: none; }
         
-        .mode-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-        .btn-mode { 
-            background: #1a1c20; border: 1px solid #333; color: var(--dim); padding: 8px; 
-            border-radius: 6px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase;
-        }
-        .btn-mode.active { background: var(--accent); color: #000; border-color: var(--accent); }
-
         .fair-display-box { 
             background: rgba(157,125,242,0.05); border: 1px dashed var(--accent); 
             padding: 10px; border-radius: 12px; margin-bottom: 12px; text-align: center;
@@ -78,10 +71,6 @@
         
         .btn-toggle-pad { width: 100%; background: transparent; border: 1px dashed #333; color: var(--dim); font-size: 8px; padding: 6px; margin-bottom: 12px; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: 800; }
         .btn-num { background: #222529; border: 1px solid #333; padding: 18px; border-radius: 10px; color: white; font-family: 'JetBrains Mono'; font-size: 20px; font-weight: bold; cursor: pointer; outline: none; transition: 0.1s; }
-
-        .selector-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 10px 0; }
-        .btn-sel { background: #111315; border: 1px solid #333; color: var(--dim); font-size: 9px; padding: 10px 2px; border-radius: 6px; cursor: pointer; font-weight: 800; outline: none; transition: 0.2s; }
-        .btn-sel.active { background: var(--accent) !important; color: #000 !important; }
 
         .tools-row { display: flex; gap: 8px; margin: 15px 0; }
         .btn-tool { flex: 1; background: #111315; border: 1px solid #333; color: var(--dim); padding: 10px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
@@ -138,6 +127,13 @@
 
         #cloud-status { position: fixed; bottom: 10px; right: 10px; font-size: 8px; color: var(--accent); font-weight: bold; }
         @media (max-width: 850px) { .main-wrapper { grid-template-columns: 1fr; } .advanced-stats { grid-template-columns: 1fr 1fr; } }
+
+        .combo-panel {
+            background: #1a1c20; border: 1px solid #2d3035; border-radius: 12px; padding: 15px; margin-bottom: 15px; display: none;
+        }
+        .combo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+        .combo-input { background: #0d0f11; border: 1px solid #333; border-radius: 6px; color: white; padding: 8px; width: 100%; text-align: center; font-family: 'JetBrains Mono'; font-size: 14px; }
+        .btn-combo-toggle { font-size: 9px; color: var(--accent); background: transparent; border: 1px solid var(--accent); padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-bottom: 5px; float: right; }
     </style>
 </head>
 <body>
@@ -207,6 +203,19 @@
                 <div class="btn-bookie" data-color="#8e44ad" onclick="setBookie('Pinnacle', this)">PINNACLE</div>
             </div>
 
+<button class="btn-combo-toggle" onclick="toggleCombo()"></button>
+<div id="combo-builder" class="combo-panel style="display: block;"">
+    <span class="label" style="color:var(--accent)">Combo Builder (Margem 1.05 + Correlação)</span>
+    <div class="combo-grid">
+        <input type="number" id="c1" class="combo-input" placeholder="Ref 1" oninput="runCombo()">
+        <input type="number" id="c2" class="combo-input" placeholder="Ref 2" oninput="runCombo()">
+        <input type="number" id="c3" class="combo-input" placeholder="Ref 3" oninput="runCombo()">
+    </div>
+    <div id="combo-info" style="font-size: 9px; color: var(--dim); margin-top: 8px; text-align: center;">
+        Insira as odds da Pinnacle para calcular a Fair Odd composta.
+    </div>
+</div>
+
             <div class="display-grid">
                 <div id="box-fair" class="input-box active" onclick="setTarget('fair')">
                     <span class="label">ODD DE REFERÊNCIA</span>
@@ -219,30 +228,8 @@
             </div>
 
             <div class="fair-display-box">
-                <span class="label" style="color:var(--accent)">Odd Justa (+3.5% Margem)</span>
+                <span class="label" style="color:var(--accent)">Odd Justa (MÉTODO LOG)</span>
                 <div id="calc-fair-value" style="font-family:'JetBrains Mono'; font-size:22px; font-weight:bold; color:#fff;">@ 0.00</div>
-            </div>
-
-            <div style="background:#111315; padding:12px; border-radius:12px; margin-bottom:15px; border: 1px solid #222;">
-                <span class="label" style="text-align:center; margin-bottom:10px;">Calculadora Pinnacle (Auto-Update)</span>
-                
-                <div class="mode-selector">
-                    <button id="mode-multi" class="btn-mode active" onclick="setMode('MULTI')">Múltipla</button>
-                    <button id="mode-bb" class="btn-mode" onclick="setMode('BB')">BetBuilder</button>
-                </div>
-
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-                    <div id="box-m1" class="input-box" onclick="setTarget('m1')"><span class="label">M1</span><input type="number" step="0.01" inputmode="decimal" id="val-m1" class="num-field" style="font-size:14px;" value="1.00" oninput="updateCombo()"></div>
-                    <div id="box-m2" class="input-box" onclick="setTarget('m2')"><span class="label">M2</span><input type="number" step="0.01" inputmode="decimal" id="val-m2" class="num-field" style="font-size:14px;" value="1.00" oninput="updateCombo()"></div>
-                    <div id="box-m3" class="input-box" onclick="setTarget('m3')"><span class="label">M3</span><input type="number" step="0.01" inputmode="decimal" id="val-m3" class="num-field" style="font-size:14px;" value="1.00" oninput="updateCombo()"></div>
-                </div>
-            </div>
-
-            <div class="selector-row">
-                <button id="k-auto" class="btn-sel" onclick="setKelly('auto')">AUTO</button>
-                <button id="k-4" class="btn-sel" onclick="setKelly(4)">1/4</button>
-                <button id="k-8" class="btn-sel" onclick="setKelly(8)">1/8</button>
-                <button id="k-10" class="btn-sel active" onclick="setKelly(10)">1/10</button>
             </div>
 
             <div style="text-align:center; margin:15px 0; padding:15px; background:#000; border-radius:12px; border: 1px solid #2d3035;">
@@ -319,7 +306,6 @@
 </div>
 
 <script>
-    // Firebase Config (IDÊNTICO AO SEU ORIGINAL)
     const firebaseConfig = {
         apiKey: "AIzaSyA7trGWz9RnvuKrK2MULn6YYlu86dBJFdU",
         authDomain: "eliteterminal-2e66e.firebaseapp.com",
@@ -333,21 +319,11 @@
     const db = firebase.database().ref('elite_user_data');
 
     let currentTarget = 'fair';
-    let currentMode = 'MULTI'; 
-    let values = { fair: '', bookie: '', m1: '1.00', m2: '1.00', m3: '1.00' };
-    
-    // APLICAÇÃO DA GESTÃO RECOMENDADA: Iniciando em 1/10 (Fração Profissional)
-    let kellyDivisor = 10, kellyMode = 10, historyData = [], myChart = null;
+    let values = { fair: '', bookie: '' };
+    let historyData = [], myChart = null;
     let textToShare = "";
     let activeBookie = 'Betano';
     let currentEditingId = null;
-
-    function setMode(m) {
-        currentMode = m;
-        document.getElementById('mode-multi').classList.toggle('active', m === 'MULTI');
-        document.getElementById('mode-bb').classList.toggle('active', m === 'BB');
-        updateCombo(); 
-    }
 
     function triggerFileSelect() { document.getElementById('ocr-upload').click(); }
 
@@ -407,87 +383,59 @@
         if (detectedOdd) { values.bookie = detectedOdd; document.getElementById('val-bookie').value = detectedOdd; calculate(); }
     }
 
-    function updateCombo() {
-        const m1 = parseFloat(document.getElementById('val-m1').value) || 1;
-        const m2 = parseFloat(document.getElementById('val-m2').value) || 1;
-        const m3 = parseFloat(document.getElementById('val-m3').value) || 1;
-        
-        const clean = (o) => o > 1 ? o * 1.035 : 1;
-        let justaCombinada = (clean(m1) * clean(m2) * clean(m3));
-
-        let selecoesValidas = 0;
-        if(m1 > 1) selecoesValidas++;
-        if(m2 > 1) selecoesValidas++;
-        if(m3 > 1) selecoesValidas++;
-
-        // APLICAÇÃO DA LÓGICA DE CORRELAÇÃO EXCLUSIVA PARA BB
-        if (currentMode === 'BB' && selecoesValidas > 1) {
-            justaCombinada = justaCombinada * 0.85; 
-        }
-
-        if(justaCombinada > 1) {
-            const refSintetica = justaCombinada / 1.035;
-            values.fair = refSintetica.toFixed(2);
-            document.getElementById('val-fair').value = values.fair;
-            calculate();
-        }
-    }
-
     function calculate() {
-        const refOdd = parseFloat(values.fair), evalOdd = parseFloat(values.bookie);
-        const fairDisplay = document.getElementById('calc-fair-value'), resEl = document.getElementById('stake-res');
-        const evEl = document.getElementById('ev-res'), limEl = document.getElementById('limit-res'), logEl = document.getElementById('algo-log');
+        const refOdd = parseFloat(values.fair);
+        const evalOdd = parseFloat(values.bookie);
         
-        if(refOdd > 1) {
-            const calculatedFair = refOdd * 1.035; 
-            fairDisplay.innerText = `@ ${calculatedFair.toFixed(2)}`;
-            limEl.innerText = `@ ${calculatedFair.toFixed(2)}`;
+        const fairDisplay = document.getElementById('calc-fair-value');
+        const resEl = document.getElementById('stake-res');
+        const evEl = document.getElementById('ev-res');
+        const limEl = document.getElementById('limit-res');
+        const logEl = document.getElementById('algo-log');
+        
+        if (refOdd > 1) {
+            // MÉTODO JUICE: LOG (Logarithmic/Power) - Conforme Imagem
+            const realProb = Math.pow(1 / refOdd, 1.035); 
+            const fairOdd = 1 / realProb;
 
-            // KELLY AUTO SUAVIZADO PARA PROTEÇÃO DE BANCA
-            if (kellyMode === 'auto') {
-                if (calculatedFair <= 2.10) kellyDivisor = 6;      
-                else if (calculatedFair <= 3.80) kellyDivisor = 12; 
-                else kellyDivisor = 18;                             
-            }
+            fairDisplay.innerText = `@ ${fairOdd.toFixed(2)}`;
+            limEl.innerText = `@ ${fairOdd.toFixed(2)}`;
 
-            if(evalOdd > 1) {
-                const ev = (evalOdd / calculatedFair) * 100; 
-                evEl.innerText = `${ev.toFixed(2)}%`;
-                if(ev > 100.00) {
-                    const p = 1 / calculatedFair, q = 1 - p, b_net = evalOdd - 1; 
-                    const fullKelly = (p * b_net - q) / b_net;
-                    let stakeUnits = (fullKelly * 100) / kellyDivisor;
+            if (evalOdd > 1) {
+                // Cálculo do Expected Value (EV)
+                const ev = (realProb * evalOdd); 
+                evEl.innerText = `${(ev * 100).toFixed(2)}%`;
+                
+                // GATILHO DE VALOR MÍNIMO (EV > 103%)
+                if (ev > 1.03) { 
                     
-                    // TRAVA DE SEGURANÇA: MÁXIMO 2.5u POR ENTRADA
-                    if (stakeUnits > 2.50) {
-                        stakeUnits = 2.50;
-                        logEl.innerText = "ALGO: LIMITADO AO TETO (MAX 2.5u)";
-                    } else {
-                        logEl.innerText = currentMode === 'BB' ? "ALGO: BB ATIVO (15% OFF)" : "ALGO: MULTIPLA (PURA)";
+                    // CRITÉRIO DE KELLY BRUTO
+                    const b = evalOdd - 1;
+                    const q = 1 - realProb;
+                    const fullKelly = (realProb * b - q) / b;
+
+                    // FATOR KELLY: 25% (Conforme Imagem)
+                    let stakeUnits = (fullKelly * 100) * 0.25;
+
+                    // TETO DE SEGURANÇA (2.5u)
+                    if (stakeUnits > 2.5) {
+                        stakeUnits = 2.5;
                     }
 
+                    // ARREDONDAMENTO PARA 0.25 (Padrão Imagem)
                     const roundedStake = Math.max(0, Math.round(stakeUnits * 4) / 4);
+                    
                     resEl.innerText = roundedStake.toFixed(2) + "u";
                     resEl.style.color = "var(--green)";
+                    logEl.innerText = "LOG + KELLY 25% + ARRED 0.25";
                     
                 } else { 
-                    resEl.innerText = "SEM EDGE"; resEl.style.color = "var(--red)"; 
-                    logEl.innerText = "ODD ABAIXO DO VALOR JUSTO";
+                    resEl.innerText = "SEM EDGE"; 
+                    resEl.style.color = "var(--red)"; 
+                    logEl.innerText = "EV ABAIXO DE 103% (FORA DOS PARÂMETROS)";
                 }
             }
         }
-    }
-
-    function setKelly(k) { 
-        kellyMode = k; 
-        document.querySelectorAll('[id^="k-"]').forEach(b => b.classList.remove('active')); 
-        if (k === 'auto') {
-            document.getElementById('k-auto').classList.add('active');
-        } else {
-            document.getElementById('k-'+k).classList.add('active'); 
-            kellyDivisor = k; 
-        }
-        calculate(); 
     }
 
     function enableDragScroll(containerId) {
@@ -504,11 +452,8 @@
         enableDragScroll('bookie-slider'); enableDragScroll('table-scroll-container');
         document.querySelectorAll('.num-field, .text-input').forEach(input => {
             input.addEventListener('focus', function() { let t = this.id.replace('val-', ''); if (values.hasOwnProperty(t)) { currentTarget = t; document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active')); let box = document.getElementById('box-'+t); if(box) box.classList.add('active'); } });
-            input.addEventListener('dblclick', function() { this.value = ''; let t = this.id.replace('val-', ''); if (values.hasOwnProperty(t)) { values[t] = ''; if(t.startsWith('m')) values[t]='1.00'; calculate(); } });
+            input.addEventListener('dblclick', function() { this.value = ''; let t = this.id.replace('val-', ''); if (values.hasOwnProperty(t)) { values[t] = ''; calculate(); } });
         });
-        
-        // Garantindo que inicia em 1/10
-        setKelly(10);
     });
 
     function setTarget(t) { let input = document.getElementById('val-'+t); if (input) input.focus(); }
@@ -526,7 +471,7 @@
         if (key === 'DEL') values[currentTarget] = values[currentTarget].slice(0, -1);
         else values[currentTarget] += key;
         input.value = values[currentTarget];
-        if(currentTarget.startsWith('m')) updateCombo(); else calculate();
+        calculate();
     }
 
     function toggleNumpad() { document.getElementById('numpad-control').classList.toggle('visible'); }
@@ -583,6 +528,31 @@
     function shareCurrentBet() { const evt = document.getElementById('input-evento').value || '---'; const mkt = document.getElementById('input-mercado').value || '---'; const odd = values.bookie || '0.00'; const stk = document.getElementById('stake-res').innerText; textToShare = `🚀 *SINAL ELITE PRO*\n🏟️ *${evt.toUpperCase()}*\n📌 Mercado: ${mkt.toUpperCase()}\n🏠 Casa: ${activeBookie}\n🏆 Odd: @${odd}\n💰 Stake Sugerida: ${stk}`; document.getElementById('shareOverlay').style.display = 'flex'; }
     function shareHistoryBet(id) { const b = historyData.find(x => x.id == id); textToShare = `🔥 *REGISTRO ELITE*\n🏟️ *${b.evento}*\n📌 Mercado: ${b.mercado}\n🏠 Casa: ${b.bookie}\n🏆 Odd: @${b.odd.toFixed(2)}\n💰 Stake: ${b.stake.toFixed(2)}u\n📊 Status: ${b.status}`; document.getElementById('shareOverlay').style.display = 'flex'; }
     function exportData() { if(historyData.length === 0) return; let csv = "Data,Evento,Mercado,Casa,Odd,Stake,PL,Status\n"; historyData.forEach(b => { csv += `${b.date},${b.evento},${b.mercado},${b.bookie},${b.odd},${b.stake},${b.pl},${b.status}\n`; }); const blob = new Blob([csv], { type: 'text/csv' }); const url = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.setAttribute('hidden', ''); a.setAttribute('href', url); a.setAttribute('download', 'historico_elite.csv'); document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+
+function toggleCombo() {
+    const panel = document.getElementById('combo-builder');
+    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+}
+
+function runCombo() {
+    const r1 = parseFloat(document.getElementById('c1').value) || 0;
+    const r2 = parseFloat(document.getElementById('c2').value) || 0;
+    const r3 = parseFloat(document.getElementById('c3').value) || 0;
+
+    let odds = [r1, r2, r3].filter(o => o > 1);
+    if (odds.length < 2) return;
+
+    let fairOdds = odds.map(o => o * 1.05);
+    let combinedFair = fairOdds.reduce((acc, curr) => acc * curr, 1);
+    let desconto = odds.length === 2 ? 0.15 : 0.25;
+    let finalFair = combinedFair * (1 - desconto);
+
+    document.getElementById('val-fair').value = finalFair.toFixed(2);
+    values.fair = finalFair.toFixed(2);
+    document.getElementById('algo-log').innerText = `COMBO DETECTADO: DESCONTO ${desconto*100}% APLICADO`;
+    calculate(); 
+}
+
 </script>
 </body>
 </html>
