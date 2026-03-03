@@ -432,7 +432,7 @@
                 } else { 
                     resEl.innerText = "SEM EDGE"; 
                     resEl.style.color = "var(--red)"; 
-                    logEl.innerText = "EV ABAIXO DE 103% (FORA DOS PARÂMETROS)";
+                    logEl.innerText = "EV ABAIXO DE 105% (FORA DOS PARÂMETROS)";
                 }
             }
         }
@@ -481,7 +481,7 @@
         if(!b || isNaN(s) || s <= 0) return;
         const id = Date.now().toString();
         db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: document.getElementById('input-evento').value.toUpperCase()||'EVENTO', mercado: document.getElementById('input-mercado').value.toUpperCase()||'MERCADO', bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
-        location.reload();
+        
     }
 
     db.on('value', snap => {
