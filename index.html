@@ -129,11 +129,29 @@
         @media (max-width: 850px) { .main-wrapper { grid-template-columns: 1fr; } .advanced-stats { grid-template-columns: 1fr 1fr; } }
 
         .combo-panel {
-            background: #1a1c20; border: 1px solid #2d3035; border-radius: 12px; padding: 15px; margin-bottom: 15px; display: none;
+            background: #1a1c20;
+            border: 1px solid #2d3035;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 15px;
+            display: block; /* Mantém fixo */
         }
-        .combo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
-        .combo-input { background: #0d0f11; border: 1px solid #333; border-radius: 6px; color: white; padding: 8px; width: 100%; text-align: center; font-family: 'JetBrains Mono'; font-size: 14px; }
-        .btn-combo-toggle { font-size: 9px; color: var(--accent); background: transparent; border: 1px solid var(--accent); padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-bottom: 5px; float: right; }
+        .combo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .combo-input {
+            background: #0d0f11;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: white;
+            padding: 8px;
+            width: 100%;
+            text-align: center;
+            font-family: 'JetBrains Mono';
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -203,18 +221,13 @@
                 <div class="btn-bookie" data-color="#8e44ad" onclick="setBookie('Pinnacle', this)">PINNACLE</div>
             </div>
 
-<button class="btn-combo-toggle" onclick="toggleCombo()"></button>
-<div id="combo-builder" class="combo-panel style="display: block;"">
-    <span class="label" style="color:var(--accent)">Combo Builder (Margem 1.05 + Correlação)</span>
-    <div class="combo-grid">
-        <input type="number" id="c1" class="combo-input" placeholder="Ref 1" oninput="runCombo()">
-        <input type="number" id="c2" class="combo-input" placeholder="Ref 2" oninput="runCombo()">
-        <input type="number" id="c3" class="combo-input" placeholder="Ref 3" oninput="runCombo()">
-    </div>
-    <div id="combo-info" style="font-size: 9px; color: var(--dim); margin-top: 8px; text-align: center;">
-        Insira as odds da Pinnacle para calcular a Fair Odd composta.
-    </div>
-</div>
+            <div id="combo-builder" class="combo-panel">
+                <div class="combo-grid">
+                    <input type="number" id="c1" class="combo-input" placeholder="Ref 1" oninput="runCombo()">
+                    <input type="number" id="c2" class="combo-input" placeholder="Ref 2" oninput="runCombo()">
+                    <input type="number" id="c3" class="combo-input" placeholder="Ref 3" oninput="runCombo()">
+                </div>
+            </div>
 
             <div class="display-grid">
                 <div id="box-fair" class="input-box active" onclick="setTarget('fair')">
@@ -228,7 +241,7 @@
             </div>
 
             <div class="fair-display-box">
-                <span class="label" style="color:var(--accent)">Odd Justa (MÉTODO LOG)</span>
+                <span class="label" style="color:var(--accent)">Odd Justa (+3% Margem)</span>
                 <div id="calc-fair-value" style="font-family:'JetBrains Mono'; font-size:22px; font-weight:bold; color:#fff;">@ 0.00</div>
             </div>
 
@@ -384,132 +397,92 @@
     }
 
     function calculate() {
-        const refOdd = parseFloat(values.fair);
-        const evalOdd = parseFloat(values.bookie);
+        const refOdd = parseFloat(values.fair), evalOdd = parseFloat(values.bookie);
+        const fairDisplay = document.getElementById('calc-fair-value'), resEl = document.getElementById('stake-res');
+        const evEl = document.getElementById('ev-res'), limEl = document.getElementById('limit-res'), logEl = document.getElementById('algo-log');
         
-        const fairDisplay = document.getElementById('calc-fair-value');
-        const resEl = document.getElementById('stake-res');
-        const evEl = document.getElementById('ev-res');
-        const limEl = document.getElementById('limit-res');
-        const logEl = document.getElementById('algo-log');
-        
-        if (refOdd > 1) {
-            // MÉTODO JUICE: LOG (Logarithmic/Power) - Conforme Imagem
-            const realProb = Math.pow(1 / refOdd, 1.035); 
-            const fairOdd = 1 / realProb;
+        if(refOdd > 1) {
+            const calculatedFair = refOdd * 1.035; 
+            fairDisplay.innerText = `@ ${calculatedFair.toFixed(2)}`;
+            limEl.innerText = `@ ${calculatedFair.toFixed(2)}`;
 
-            fairDisplay.innerText = `@ ${fairOdd.toFixed(2)}`;
-            limEl.innerText = `@ ${fairOdd.toFixed(2)}`;
-
-            if (evalOdd > 1) {
-                // Cálculo do Expected Value (EV)
-                const ev = (realProb * evalOdd); 
-                evEl.innerText = `${(ev * 100).toFixed(2)}%`;
+            if(evalOdd > 1) {
+                const ev = (evalOdd / calculatedFair) * 100; 
+                evEl.innerText = `${ev.toFixed(2)}%`;
                 
-                // GATILHO DE VALOR MÍNIMO (EV > 103%)
-                if (ev > 1.03) { 
-                    
-                    // CRITÉRIO DE KELLY BRUTO
-                    const b = evalOdd - 1;
-                    const q = 1 - realProb;
-                    const fullKelly = (realProb * b - q) / b;
+                if(ev > 103.00) {
+                    const p = 1 / calculatedFair;
+                    const q = 1 - p;
+                    const b_net = evalOdd - 1; 
+                    const fullKelly = (p * b_net - q) / b_net;
 
-                    // FATOR KELLY: 25% (Conforme Imagem)
-                    let stakeUnits = (fullKelly * 100) * 0.25;
+                    let divisorKelly;
+                    if (refOdd <= 1.70) { divisorKelly = 4; logEl.innerText = "ALGO: KELLY DINÂMICO 1/6 (LOW RISK)"; } 
+                    else if (refOdd > 1.70 && refOdd <= 2.50) { divisorKelly = 6; logEl.innerText = "ALGO: KELLY DINÂMICO 1/8 (MID RISK)"; } 
+                    else { divisorKelly = 8; logEl.innerText = "ALGO: KELLY DINÂMICO 1/10 (HIGH RISK)"; }
 
-                    // TETO DE SEGURANÇA (2.5u)
-                    if (stakeUnits > 2.5) {
-                        stakeUnits = 2.5;
-                    }
-
-                    // ARREDONDAMENTO PARA 0.25 (Padrão Imagem)
+                    let stakeUnits = (fullKelly * 100) / divisorKelly;
+                    if (stakeUnits > 2.5) { stakeUnits = 2.5; logEl.innerText += " | LIMITADO AO TETO"; }
                     const roundedStake = Math.max(0, Math.round(stakeUnits * 4) / 4);
-                    
                     resEl.innerText = roundedStake.toFixed(2) + "u";
                     resEl.style.color = "var(--green)";
-                    logEl.innerText = "LOG + KELLY 25% + ARRED 0.25";
-                    
                 } else { 
-                    resEl.innerText = "SEM EDGE"; 
-                    resEl.style.color = "var(--red)"; 
-                    logEl.innerText = "EV ABAIXO DE 105% (FORA DOS PARÂMETROS)";
+                    resEl.innerText = "SEM EDGE"; resEl.style.color = "var(--red)"; 
+                    logEl.innerText = "EV ABAIXO DE 103% (FORA DOS PARÂMETROS)";
                 }
             }
+        } else {
+            resEl.innerText = "0.00u";
+            resEl.style.color = "var(--dim)";
+            fairDisplay.innerText = "@ 0.00";
+            evEl.innerText = "0.00%";
         }
     }
 
-    function enableDragScroll(containerId) {
-        const slider = document.getElementById(containerId); if(!slider) return;
-        let isDown = false, startX, scrollLeft, startY, scrollTop;
-        slider.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - slider.offsetLeft; startY = e.pageY - slider.offsetTop; scrollLeft = slider.scrollLeft; scrollTop = slider.scrollTop; });
-        slider.addEventListener('mouseleave', () => isDown = false); slider.addEventListener('mouseup', () => isDown = false);
-        slider.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; const y = e.pageY - slider.offsetTop; slider.scrollLeft = scrollLeft - (x - startX) * 1.5; slider.scrollTop = scrollTop - (y - startY) * 1.5; });
-    }
-
-    window.onclick = function(event) { if (!event.target.classList.contains('badge')) { document.getElementById('quickStatusMenu').style.display = 'none'; } }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        enableDragScroll('bookie-slider'); enableDragScroll('table-scroll-container');
-        document.querySelectorAll('.num-field, .text-input').forEach(input => {
-            input.addEventListener('focus', function() { let t = this.id.replace('val-', ''); if (values.hasOwnProperty(t)) { currentTarget = t; document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active')); let box = document.getElementById('box-'+t); if(box) box.classList.add('active'); } });
-            input.addEventListener('dblclick', function() { this.value = ''; let t = this.id.replace('val-', ''); if (values.hasOwnProperty(t)) { values[t] = ''; calculate(); } });
-        });
-    });
-
-    function setTarget(t) { let input = document.getElementById('val-'+t); if (input) input.focus(); }
-
-    function setBookie(name, el) {
-        activeBookie = name;
-        document.querySelectorAll('.btn-bookie').forEach(btn => { btn.classList.remove('active'); btn.style.borderColor = '#2d3035'; btn.style.color = 'var(--dim)'; });
-        el.classList.add('active'); el.style.borderColor = el.getAttribute('data-color'); el.style.color = '#fff';
-    }
-
-    function updateVal(key, val) { values[key] = val; calculate(); }
-
-    function press(key) {
-        let input = document.getElementById('val-' + currentTarget);
-        if (key === 'DEL') values[currentTarget] = values[currentTarget].slice(0, -1);
-        else values[currentTarget] += key;
-        input.value = values[currentTarget];
+    function addBet() {
+        const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
+        if(!b || isNaN(s) || s <= 0) return;
+        const id = Date.now().toString();
+        db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: document.getElementById('input-evento').value.toUpperCase()||'EVENTO', mercado: document.getElementById('input-mercado').value.toUpperCase()||'MERCADO', bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
+        
+        // CORREÇÃO: Removido location.reload() para evitar desaparecimento dos dados
+        document.getElementById('input-evento').value = '';
+        document.getElementById('input-mercado').value = '';
+        document.getElementById('c1').value = '';
+        document.getElementById('c2').value = '';
+        document.getElementById('c3').value = '';
+        document.getElementById('val-fair').value = '';
+        document.getElementById('val-bookie').value = '';
+        values = { fair: '', bookie: '' };
         calculate();
     }
 
-    function toggleNumpad() { document.getElementById('numpad-control').classList.toggle('visible'); }
+    function runCombo() {
+        const r1 = parseFloat(document.getElementById('c1').value) || 0;
+        const r2 = parseFloat(document.getElementById('c2').value) || 0;
+        const r3 = parseFloat(document.getElementById('c3').value) || 0;
 
-function addBet() {
-    const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
-    if(!b || isNaN(s) || s <= 0) {
-        alert("Dados insuficientes para registrar.");
-        return;
+        let odds = [r1, r2, r3].filter(o => o > 1);
+        
+        if (odds.length < 2) {
+            document.getElementById('val-fair').value = '';
+            values.fair = '';
+            calculate();
+            return;
+        }
+
+        let fairOdds = odds.map(o => o * 1.05);
+        let combinedFair = fairOdds.reduce((acc, curr) => acc * curr, 1);
+        let desconto = odds.length === 2 ? 0.15 : 0.25;
+        let finalFair = combinedFair * (1 - desconto);
+
+        document.getElementById('val-fair').value = finalFair.toFixed(2);
+        values.fair = finalFair.toFixed(2);
+        document.getElementById('algo-log').innerText = `COMBO: ${odds.length} MERCADOS | DESC. ${desconto*100}%`;
+        calculate(); 
     }
-    
-    const id = Date.now().toString();
-    db.child(id).set({ 
-        id, 
-        odd: b, 
-        stake: s, 
-        ref: parseFloat(values.fair)||0, 
-        evento: document.getElementById('input-evento').value.toUpperCase()||'EVENTO', 
-        mercado: document.getElementById('input-mercado').value.toUpperCase()||'MERCADO', 
-        bookie: activeBookie, 
-        status: 'WAIT', 
-        pl: 0, 
-        date: new Date().toLocaleDateString(), 
-        timestamp: Date.now() 
-    });
 
-    // CORREÇÃO: Removido location.reload() para evitar que o gráfico suma
-    
-    // Limpar campos para a próxima
-    document.getElementById('c1').value = '';
-    document.getElementById('c2').value = '';
-    document.getElementById('c3').value = '';
-    document.getElementById('val-fair').value = '';
-    document.getElementById('val-bookie').value = '';
-    values.fair = '';
-    values.bookie = '';
-}
-
+    // --- Listeners e Renderização ---
     db.on('value', snap => {
         const statusEl = document.getElementById('cloud-status'); statusEl.innerText = "NUVEM ATIVA"; statusEl.style.color = "var(--green)";
         const val = snap.val(); historyData = val ? Object.values(val).sort((a,b) => b.timestamp - a.timestamp) : [];
@@ -555,46 +528,29 @@ function addBet() {
     function shareHistoryBet(id) { const b = historyData.find(x => x.id == id); textToShare = `🔥 *REGISTRO ELITE*\n🏟️ *${b.evento}*\n📌 Mercado: ${b.mercado}\n🏠 Casa: ${b.bookie}\n🏆 Odd: @${b.odd.toFixed(2)}\n💰 Stake: ${b.stake.toFixed(2)}u\n📊 Status: ${b.status}`; document.getElementById('shareOverlay').style.display = 'flex'; }
     function exportData() { if(historyData.length === 0) return; let csv = "Data,Evento,Mercado,Casa,Odd,Stake,PL,Status\n"; historyData.forEach(b => { csv += `${b.date},${b.evento},${b.mercado},${b.bookie},${b.odd},${b.stake},${b.pl},${b.status}\n`; }); const blob = new Blob([csv], { type: 'text/csv' }); const url = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.setAttribute('hidden', ''); a.setAttribute('href', url); a.setAttribute('download', 'historico_elite.csv'); document.body.appendChild(a); a.click(); document.body.removeChild(a); }
 
-function toggleCombo() {
-    const panel = document.getElementById('combo-builder');
-    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-function runCombo() {
-    // Captura os valores atualizados
-    const r1 = parseFloat(document.getElementById('c1').value) || 0;
-    const r2 = parseFloat(document.getElementById('c2').value) || 0;
-    const r3 = parseFloat(document.getElementById('c3').value) || 0;
-
-    let odds = [r1, r2, r3].filter(o => o > 1);
-    
-    // Se tiver menos de 2 odds, limpa a referência e sai
-    if (odds.length < 2) {
-        document.getElementById('val-fair').value = '';
-        values.fair = '';
-        return;
+    function enableDragScroll(containerId) {
+        const slider = document.getElementById(containerId); if(!slider) return;
+        let isDown = false, startX, scrollLeft, startY, scrollTop;
+        slider.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - slider.offsetLeft; startY = e.pageY - slider.offsetTop; scrollLeft = slider.scrollLeft; scrollTop = slider.scrollTop; });
+        slider.addEventListener('mouseleave', () => isDown = false); slider.addEventListener('mouseup', () => isDown = false);
+        slider.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; const y = e.pageY - slider.offsetTop; slider.scrollLeft = scrollLeft - (x - startX) * 1.5; slider.scrollTop = scrollTop - (y - startY) * 1.5; });
     }
 
-    // 1. Aplica margem de 1.05 (5%) em cada odd [Sua sugestão ideal]
-    let fairOdds = odds.map(o => o * 1.05);
+    window.onclick = function(event) { if (!event.target.classList.contains('badge')) { document.getElementById('quickStatusMenu').style.display = 'none'; } }
 
-    // 2. Multiplicação das odds
-    let combinedFair = fairOdds.reduce((acc, curr) => acc * curr, 1);
+    document.addEventListener("DOMContentLoaded", function() {
+        enableDragScroll('bookie-slider'); enableDragScroll('table-scroll-container');
+        document.querySelectorAll('.num-field, .text-input').forEach(input => {
+            input.addEventListener('focus', function() { let t = this.id.replace('val-', ''); if (values.hasOwnProperty(t)) { currentTarget = t; document.querySelectorAll('.input-box').forEach(b => b.classList.remove('active')); let box = document.getElementById('box-'+t); if(box) box.classList.add('active'); } });
+            input.addEventListener('dblclick', function() { this.value = ''; let t = this.id.replace('val-', ''); if (values.hasOwnProperty(t)) { values[t] = ''; calculate(); } });
+        });
+    });
 
-    // 3. Desconto de Correlação (15% para 2 mercados, 25% para 3)
-    let desconto = odds.length === 2 ? 0.15 : 0.25;
-    let finalFair = combinedFair * (1 - desconto);
-
-    // 4. Atualiza o campo principal e o objeto de valores
-    const campoFair = document.getElementById('val-fair');
-    campoFair.value = finalFair.toFixed(2);
-    values.fair = finalFair.toFixed(2);
-    
-    // 5. Feedback visual no Log
-    document.getElementById('algo-log').innerText = `COMBO: ${odds.length} MERCADOS | DESC. ${desconto*100}%`;
-    document.getElementById('algo-log').style.color = "var(--gold)";
-
-    // 6. Força o cálculo da stake imediatamente
-    calculate(); 
-}
+    function setTarget(t) { let input = document.getElementById('val-'+t); if (input) input.focus(); }
+    function setBookie(name, el) { activeBookie = name; document.querySelectorAll('.btn-bookie').forEach(btn => { btn.classList.remove('active'); btn.style.borderColor = '#2d3035'; btn.style.color = 'var(--dim)'; }); el.classList.add('active'); el.style.borderColor = el.getAttribute('data-color'); el.style.color = '#fff'; }
+    function updateVal(key, val) { values[key] = val; calculate(); }
+    function press(key) { let input = document.getElementById('val-' + currentTarget); if (key === 'DEL') values[currentTarget] = values[currentTarget].slice(0, -1); else values[currentTarget] += key; input.value = values[currentTarget]; calculate(); }
+    function toggleNumpad() { document.getElementById('numpad-control').classList.toggle('visible'); }
 
 </script>
 </body>
