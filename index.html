@@ -126,32 +126,18 @@
         }
 
         #cloud-status { position: fixed; bottom: 10px; right: 10px; font-size: 8px; color: var(--accent); font-weight: bold; }
-        @media (max-width: 850px) { .main-wrapper { grid-template-columns: 1fr; } .advanced-stats { grid-template-columns: 1fr 1fr; } }
+        
+        /* CORREÇÃO VISUAL DOS CAMPOS DE COMBO */
+        .combo-panel { background: #1a1c20; border: 1px solid #2d3035; border-radius: 12px; padding: 12px; margin-bottom: 15px; }
+        .combo-grid { display: flex; gap: 10px; justify-content: space-between; }
+        .combo-input { 
+            background: #0d0f11; border: 1px solid #333; border-radius: 8px; color: white; 
+            padding: 10px 5px; width: 100%; text-align: center; font-family: 'JetBrains Mono'; 
+            font-size: 14px; box-sizing: border-box; outline: none;
+        }
+        .combo-input:focus { border-color: var(--accent); }
 
-        .combo-panel {
-            background: #1a1c20;
-            border: 1px solid #2d3035;
-            border-radius: 12px;
-            padding: 10px;
-            margin-bottom: 15px;
-            display: block; /* Mantém fixo */
-        }
-        .combo-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-        .combo-input {
-            background: #0d0f11;
-            border: 1px solid #333;
-            border-radius: 6px;
-            color: white;
-            padding: 8px;
-            width: 100%;
-            text-align: center;
-            font-family: 'JetBrains Mono';
-            font-size: 14px;
-        }
+        @media (max-width: 850px) { .main-wrapper { grid-template-columns: 1fr; } .advanced-stats { grid-template-columns: 1fr 1fr; } }
     </style>
 </head>
 <body>
@@ -416,13 +402,12 @@
                     const b_net = evalOdd - 1; 
                     const fullKelly = (p * b_net - q) / b_net;
 
-                    let divisorKelly;
-                    if (refOdd <= 1.70) { divisorKelly = 4; logEl.innerText = "ALGO: KELLY DINÂMICO 1/6 (LOW RISK)"; } 
-                    else if (refOdd > 1.70 && refOdd <= 2.50) { divisorKelly = 6; logEl.innerText = "ALGO: KELLY DINÂMICO 1/8 (MID RISK)"; } 
-                    else { divisorKelly = 8; logEl.innerText = "ALGO: KELLY DINÂMICO 1/10 (HIGH RISK)"; }
+                    // CORREÇÃO: KELLY FIXO 25% (DIVISOR 4)
+                    let divisorKelly = 4;
+                    logEl.innerText = "ALGO: MÉTODO LOG + KELLY 25% (FIXO)";
 
                     let stakeUnits = (fullKelly * 100) / divisorKelly;
-                    if (stakeUnits > 2.5) { stakeUnits = 2.5; logEl.innerText += " | LIMITADO AO TETO"; }
+                    if (stakeUnits > 2.5) { stakeUnits = 2.5; logEl.innerText += " | TETO ATINGIDO"; }
                     const roundedStake = Math.max(0, Math.round(stakeUnits * 4) / 4);
                     resEl.innerText = roundedStake.toFixed(2) + "u";
                     resEl.style.color = "var(--green)";
@@ -445,7 +430,7 @@
         const id = Date.now().toString();
         db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: document.getElementById('input-evento').value.toUpperCase()||'EVENTO', mercado: document.getElementById('input-mercado').value.toUpperCase()||'MERCADO', bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
         
-        // CORREÇÃO: Removido location.reload() para evitar desaparecimento dos dados
+        // CORREÇÃO: MANTER DADOS SEM RECARREGAR
         document.getElementById('input-evento').value = '';
         document.getElementById('input-mercado').value = '';
         document.getElementById('c1').value = '';
@@ -482,7 +467,6 @@
         calculate(); 
     }
 
-    // --- Listeners e Renderização ---
     db.on('value', snap => {
         const statusEl = document.getElementById('cloud-status'); statusEl.innerText = "NUVEM ATIVA"; statusEl.style.color = "var(--green)";
         const val = snap.val(); historyData = val ? Object.values(val).sort((a,b) => b.timestamp - a.timestamp) : [];
