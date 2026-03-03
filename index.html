@@ -138,6 +138,41 @@
         .combo-input:focus { border-color: var(--accent); }
 
         @media (max-width: 850px) { .main-wrapper { grid-template-columns: 1fr; } .advanced-stats { grid-template-columns: 1fr 1fr; } }
+
+
+/* MODO PÚBLICO: Esconde TUDO que é administrativo */
+body.public-view .calc-col, 
+body.public-view .btn-del, 
+body.public-view .btn-tool,
+body.public-view #btn-add,
+body.public-view .btn-scan,
+body.public-view .btn-toggle-pad,
+body.public-view .btn-share-row,
+body.public-view .btn-share-main,
+body.public-view #cloud-status,
+body.public-view .tools-row { 
+    display: none !important; 
+}
+
+/* Bloqueia cliques na tabela e badges para evitar edições */
+body.public-view #history-table {
+    pointer-events: none !important;
+    user-select: none;
+}
+
+/* Ajusta a tabela para não mostrar colunas vazias */
+body.public-view td:nth-child(1), /* Esconde a coluna do ícone 📲 */
+body.public-view td:nth-child(7)  /* Esconde a coluna do botão X */ {
+    display: none !important;
+}
+
+/* Centraliza o Dashboard */
+body.public-view .main-wrapper { 
+    grid-template-columns: 1fr; 
+    max-width: 900px; 
+    margin: 0 auto;
+}
+
     </style>
 </head>
 <body>
@@ -250,6 +285,10 @@
             </div>
 
             <button class="btn-share-main" onclick="document.getElementById('optionsOverlay').style.display='flex'">📤 Partilhar Sinal / Resultado</button>
+		
+<button class="btn-tool" onclick="gerarLinkPublico()" style="background: rgba(157,125,242,0.1); color: var(--accent); border: 1px dashed var(--accent); margin-bottom: 10px; width: 100%;">
+    🔗 GERAR LINK DASHBOARD PÚBLICO
+</button>
             <button id="btn-add" onclick="addBet()" style="width:100%; background:var(--accent); color:#000; border:none; padding:18px; border-radius:12px; font-weight:800; font-size:14px; margin-bottom:15px; cursor:pointer;">REGISTRAR OPERAÇÃO</button>
 
             <button class="btn-toggle-pad" onclick="toggleNumpad()">⌨ Abrir Teclado Visual do App</button>
@@ -503,7 +542,18 @@
         myChart = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [{ label: 'PL', data: dataPoints, borderColor: '#9d7df2', fill: true, tension: 0.3, backgroundColor: 'rgba(157,125,242,0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#222' } } } } });
     }
 
-    function openStatusMenu(id, element) { currentEditingId = id; const menu = document.getElementById('quickStatusMenu'); const rect = element.getBoundingClientRect(); menu.style.display = 'flex'; menu.style.top = (rect.top + window.scrollY) + 'px'; menu.style.left = (rect.left - 150) + 'px'; }
+function openStatusMenu(id, element) {
+    // PROTEÇÃO: Se estiver no modo público, não abre o menu
+    if (document.body.classList.contains('public-view')) return;
+
+    currentEditingId = id; 
+    const menu = document.getElementById('quickStatusMenu'); 
+    const rect = element.getBoundingClientRect(); 
+    menu.style.display = 'flex'; 
+    menu.style.top = (rect.top + window.scrollY) + 'px'; 
+    menu.style.left = (rect.left - 150) + 'px'; 
+
+}
     function confirmStatus(status) { if(!currentEditingId) return; const b = historyData.find(x => x.id == currentEditingId); b.status = status; if(status === 'WIN') b.pl = (b.odd - 1) * b.stake; else if(status === '1/2 WIN') b.pl = ((b.odd - 1) * b.stake) / 2; else if(status === 'RED') b.pl = -b.stake; else if(status === '1/2 RED') b.pl = -b.stake / 2; else b.pl = 0; db.child(currentEditingId).update(b); document.getElementById('quickStatusMenu').style.display = 'none'; }
     function deleteBet(id) { if(confirm("Excluir registro?")) db.child(id).remove(); }
     function clearAll() { if(confirm("LIMPAR TODO O HISTÓRICO?")) db.set(null); }
@@ -537,6 +587,32 @@
     function updateVal(key, val) { values[key] = val; calculate(); }
     function press(key) { let input = document.getElementById('val-' + currentTarget); if (key === 'DEL') values[currentTarget] = values[currentTarget].slice(0, -1); else values[currentTarget] += key; input.value = values[currentTarget]; calculate(); }
     function toggleNumpad() { document.getElementById('numpad-control').classList.toggle('visible'); }
+
+// Função para você copiar o link de visualização
+    function gerarLinkPublico() {
+        const link = window.location.origin + window.location.pathname + '?view=public';
+        
+        const el = document.createElement('textarea');
+        el.value = link;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        
+        alert("Link Público Copiado!\n\nEnvie este link para as pessoas verem apenas seus resultados e o gráfico.");
+    }
+
+    function aplicarModoPublico() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('view') === 'public') {
+        document.body.classList.add('public-view');
+        // Opcional: mudar o título da aba para quem visualiza
+        document.title = "Performance - Elite V14.8";
+    }
+}
+
+// Chame assim que o script carregar
+aplicarModoPublico();
 
 </script>
 </body>
