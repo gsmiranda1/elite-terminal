@@ -476,13 +476,39 @@
 
     function toggleNumpad() { document.getElementById('numpad-control').classList.toggle('visible'); }
 
-    function addBet() {
-        const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
-        if(!b || isNaN(s) || s <= 0) return;
-        const id = Date.now().toString();
-        db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: document.getElementById('input-evento').value.toUpperCase()||'EVENTO', mercado: document.getElementById('input-mercado').value.toUpperCase()||'MERCADO', bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
-        
+function addBet() {
+    const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
+    if(!b || isNaN(s) || s <= 0) {
+        alert("Dados insuficientes para registrar.");
+        return;
     }
+    
+    const id = Date.now().toString();
+    db.child(id).set({ 
+        id, 
+        odd: b, 
+        stake: s, 
+        ref: parseFloat(values.fair)||0, 
+        evento: document.getElementById('input-evento').value.toUpperCase()||'EVENTO', 
+        mercado: document.getElementById('input-mercado').value.toUpperCase()||'MERCADO', 
+        bookie: activeBookie, 
+        status: 'WAIT', 
+        pl: 0, 
+        date: new Date().toLocaleDateString(), 
+        timestamp: Date.now() 
+    });
+
+    // CORREÇÃO: Removido location.reload() para evitar que o gráfico suma
+    
+    // Limpar campos para a próxima
+    document.getElementById('c1').value = '';
+    document.getElementById('c2').value = '';
+    document.getElementById('c3').value = '';
+    document.getElementById('val-fair').value = '';
+    document.getElementById('val-bookie').value = '';
+    values.fair = '';
+    values.bookie = '';
+}
 
     db.on('value', snap => {
         const statusEl = document.getElementById('cloud-status'); statusEl.innerText = "NUVEM ATIVA"; statusEl.style.color = "var(--green)";
@@ -532,24 +558,41 @@
 function toggleCombo() {
     const panel = document.getElementById('combo-builder');
     panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-}
-
 function runCombo() {
+    // Captura os valores atualizados
     const r1 = parseFloat(document.getElementById('c1').value) || 0;
     const r2 = parseFloat(document.getElementById('c2').value) || 0;
     const r3 = parseFloat(document.getElementById('c3').value) || 0;
 
     let odds = [r1, r2, r3].filter(o => o > 1);
-    if (odds.length < 2) return;
+    
+    // Se tiver menos de 2 odds, limpa a referência e sai
+    if (odds.length < 2) {
+        document.getElementById('val-fair').value = '';
+        values.fair = '';
+        return;
+    }
 
+    // 1. Aplica margem de 1.05 (5%) em cada odd [Sua sugestão ideal]
     let fairOdds = odds.map(o => o * 1.05);
+
+    // 2. Multiplicação das odds
     let combinedFair = fairOdds.reduce((acc, curr) => acc * curr, 1);
+
+    // 3. Desconto de Correlação (15% para 2 mercados, 25% para 3)
     let desconto = odds.length === 2 ? 0.15 : 0.25;
     let finalFair = combinedFair * (1 - desconto);
 
-    document.getElementById('val-fair').value = finalFair.toFixed(2);
+    // 4. Atualiza o campo principal e o objeto de valores
+    const campoFair = document.getElementById('val-fair');
+    campoFair.value = finalFair.toFixed(2);
     values.fair = finalFair.toFixed(2);
-    document.getElementById('algo-log').innerText = `COMBO DETECTADO: DESCONTO ${desconto*100}% APLICADO`;
+    
+    // 5. Feedback visual no Log
+    document.getElementById('algo-log').innerText = `COMBO: ${odds.length} MERCADOS | DESC. ${desconto*100}%`;
+    document.getElementById('algo-log').style.color = "var(--gold)";
+
+    // 6. Força o cálculo da stake imediatamente
     calculate(); 
 }
 
