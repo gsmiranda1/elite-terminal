@@ -498,7 +498,7 @@ body.public-view .main-wrapper {
             return;
         }
 
-        let fairOdds = odds.map(o => o * 1.05);
+        let fairOdds = odds.map(o => o * 1.02);
         let combinedFair = fairOdds.reduce((acc, curr) => acc * curr, 1);
         let desconto = odds.length === 2 ? 0.15 : 0.25;
         let finalFair = combinedFair * (1 - desconto);
