@@ -4,22 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Elite V14.8 - Pinnacle Pro Scanner</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/tesseract.js@2.1.4/dist/tesseract.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@500;800&display=swap" rel="stylesheet">
     <style>
+                /* Garante fundo escuro nos campos de evento e mercado */
+                #input-evento, #input-mercado {
+                    background: #18181b !important;
+                    color: #fff;
+                    border: 1px solid #27272a;
+                    font-family: 'Inter', Arial, sans-serif;
+                }
         :root {
-            --bg: #0d0f11; --card: #16181a; --accent: #9d7df2; 
-            --green: #4ade80; --red: #f87171; --text: #e2e2e2; --dim: #6b7280; --gold: #fbbf24;
+            --background: #181c20;
+            --background-alt: #23272b;
+            --card: #22262a;
+            --card-border: #2c3136;
+            --accent: #7c4dff;
+            --accent-strong: #4fa3ff;
+            --green: #2ecc71;
+            --red: #e57373;
+            --text: #e0e6ed;
+            --dim: #b0b8c1;
+            --gold: #ffe082;
         }
         body { 
-            font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); 
-            margin: 0; padding: 15px; display: flex; justify-content: center;
-            min-height: 100vh; overflow-y: auto;
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-y: auto;
+        input, button, select, textarea {
+            font-family: 'Inter', Arial, 'Segoe UI', Verdana, sans-serif;
+            font-size: 18px;
+            line-height: 1.5;
         }
-        .main-wrapper { display: grid; grid-template-columns: 360px 1fr; gap: 20px; width: 100%; max-width: 1150px; }
+        }
+        .main-wrapper {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px; /* Limita a largura máxima do dashboard */
+            margin: 40px auto;  /* Centraliza e adiciona espaçamento vertical */
+            justify-content: center;
+            background: var(--background-alt);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 24px;
+        }
         .calc-card, .chart-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #26292c; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .display-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
         
@@ -39,7 +79,10 @@
         .text-input:focus { border-color: var(--accent); background: #16181a; box-shadow: 0 0 10px rgba(157,125,242,0.1); }
 
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
 
         .num-field { 
             background: transparent; border: none; color: white; font-family: 'JetBrains Mono'; 
@@ -152,7 +195,7 @@ body.public-view .btn-share-main,
 body.public-view #cloud-status,
 body.public-view .tools-row { 
     display: none !important; 
-}
+/* Removido fechamento de bloco extra que causava erro */
 
 /* Bloqueia cliques na tabela e badges para evitar edições */
 body.public-view #history-table {
@@ -173,9 +216,301 @@ body.public-view .main-wrapper {
     margin: 0 auto;
 }
 
+    /* ====== TEMA CLARO ====== */
+    body.light-theme {
+        --background: #f5f6fa;
+        --background-alt: #fff;
+        --card: #fff;
+        --card-border: #e0e0e0;
+        --accent: #7c4dff;
+        --accent-strong: #9d7df2;
+        --green: #1ecb8c;
+        --red: #ff5e5b;
+        --text: #222;
+        --dim: #888;
+        --gold: #ffd700;
+    }
+    body.light-theme .main-wrapper,
+    body.light-theme .calc-card,
+    body.light-theme .chart-card {
+        box-shadow: 0 4px 24px #0001;
+    }
+    body.light-theme .btn-scan,
+    body.light-theme .btn-tool,
+    body.light-theme .btn-share-main {
+        background: #f3f3ff !important;
+        color: var(--accent) !important;
+        border-color: var(--accent) !important;
+    }
+    body.light-theme .input-box,
+    body.light-theme .combo-panel {
+        background: #f8f8ff !important;
+        border-color: #e0e0e0 !important;
+    }
+    body.light-theme .text-input,
+    body.light-theme .combo-input {
+        background: #fff !important;
+        color: #222 !important;
+        border-color: #d0d0d0 !important;
+    }
+    body.light-theme .num-field {
+        color: #222 !important;
+    }
+    body.light-theme .fair-display-box {
+        background: #ede7fa;
+        border-color: var(--accent);
+    }
+    body.light-theme .stat-box {
+        background: #f8f8ff;
+        border-color: #e0e0e0;
+        color: #222;
+    }
+    body.light-theme .badge {
+        background: #ede7fa;
+        color: var(--accent);
+    }
+    body.light-theme .b-win { background: #e6f9f0; color: var(--green); }
+    body.light-theme .b-red { background: #ffeaea; color: var(--red); }
+    body.light-theme .b-void { background: #f3f3f3; color: #888; border: 1px solid #e0e0e0; }
+    body.light-theme .b-wait { background: #f3f3f3; color: #aaa; }
+    body.light-theme .modal-content {
+        background: #fff !important;
+        color: #222 !important;
+        border-color: var(--accent);
+    }
+    body.light-theme .btn-close {
+        filter: none !important;
+    }
+    /* ======================== */
+
+body.light-theme {
+    --background: #f7f8fa;
+    --background-alt: #fff;
+    --card: #fff;
+    --card-border: #d1d5db;
+    --accent: #4fa3ff;
+    --accent-strong: #7c4dff;
+    --green: #2ecc71;
+    --red: #e57373;
+    --text: #222b36;
+    --dim: #5a6270;
+    --gold: #ffe082;
+}
+body.light-theme, body.light-theme input, body.light-theme button, body.light-theme select, body.light-theme textarea {
+    font-family: 'Inter', Arial, 'Segoe UI', Verdana, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+}
+}
+body.light-theme .main-wrapper,
+body.light-theme .calc-card,
+body.light-theme .chart-card {
+    box-shadow: 0 4px 24px #0001;
+}
+body.light-theme .btn-scan,
+body.light-theme .btn-tool,
+body.light-theme .btn-share-main {
+    background: #f3f3ff !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+body.light-theme .input-box,
+body.light-theme .combo-panel {
+    background: #f8f8ff !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme .text-input,
+body.light-theme .combo-input {
+    background: #fff !important;
+    color: #222 !important;
+    border-color: #d0d0d0 !important;
+}
+body.light-theme .num-field {
+    color: #222 !important;
+}
+body.light-theme .fair-display-box {
+    background: #ede7fa;
+    border-color: var(--accent);
+}
+body.light-theme .stat-box {
+    background: #f8f8ff;
+    border-color: #e0e0e0;
+    color: #222;
+}
+body.light-theme .badge {
+    background: #ede7fa;
+    color: var(--accent);
+}
+body.light-theme .b-win { background: #e6f9f0; color: var(--green); }
+body.light-theme .b-red { background: #ffeaea; color: var(--red); }
+body.light-theme .b-void { background: #f3f3f3; color: #888; border: 1px solid #e0e0e0; }
+body.light-theme .b-wait { background: #f3f3f3; color: #aaa; }
+body.light-theme .modal-content {
+    background: #fff !important;
+    color: #222 !important;
+    border-color: var(--accent);
+}
+body.light-theme .btn-close {
+    filter: none !important;
+}
+body.light-theme .calc-card,
+body.light-theme .chart-card {
+    background: #fff !important;
+    border-color: #e0e0e0 !important;
+    color: #222 !important;
+}
+body.light-theme .input-box {
+    background: #fff !important;
+    border-color: #e0e0e0 !important;
+    color: #222 !important;
+}
+body.light-theme .fair-display-box {
+    background: #f3f0fa !important;
+    color: #222 !important;
+}
+body.light-theme .share-modal {
+    background: #fff !important;
+    color: #222 !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme .btn-dest {
+    background: #f8f8ff !important;
+    color: #222 !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme .btn-scan {
+    background: #f3f3ff !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+body.light-theme .btn-share-row {
+    color: var(--accent) !important;
+}
+body.light-theme .btn-tool {
+    background: #f3f3ff !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+body.light-theme .btn-share-main {
+    background: #f3f3ff !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+body.light-theme .btn-toggle-pad {
+    background: #f3f3ff !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+body.light-theme .numpad {
+    background: #fff !important;
+}
+body.light-theme .btn-num {
+    background: #f3f3ff !important;
+    color: #222 !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme .combo-panel {
+    background: #fff !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme .combo-input {
+    background: #fff !important;
+    color: #222 !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme .main-wrapper {
+    background: #f5f6fa !important;
+}
+body.light-theme .advanced-stats {
+    background: #fff !important;
+}
+body.light-theme .stat-box {
+    background: #f8f8ff !important;
+    color: #222 !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme .modal-content {
+    background: #fff !important;
+    color: #222 !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme .status-menu-popup {
+    background: #fff !important;
+    color: #222 !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme .status-option {
+    background: #f3f3ff !important;
+    color: #222 !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme .input-text-group {
+    background: #fff !important;
+    border-radius: 8px;
+}
+body.light-theme .text-input {
+    background: #fff !important;
+    color: #222 !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme #input-evento,
+body.light-theme #input-mercado {
+    background: #fff !important;
+    color: #222 !important;
+    border: 1px solid #e0e0e0 !important;
+}
+body.light-theme .stats-row > div {
+    background: #fff !important;
+    color: #222 !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme #stake-res,
+body.light-theme #algo-log,
+body.light-theme #box-fair,
+body.light-theme #box-bookie,
+body.light-theme .input-box,
+body.light-theme .fair-display-box {
+    background: #fff !important;
+    color: #222 !important;
+    border-color: #e0e0e0 !important;
+}
+body.light-theme .calc-card > div[style*="background:#000"] {
+    background: #fff !important;
+    color: #222 !important;
+    border: 1px solid #e0e0e0 !important;
+}
+body.light-theme #stake-res {
+    color: #222 !important;
+}
+body.light-theme #algo-log {
+    color: var(--accent) !important;
+}
+body.light-theme #cloud-status {
+    color: var(--accent) !important;
+}
+body.light-theme .table-container {
+    background: #fff !important;
+}
+body.light-theme table {
+    background: #fff !important;
+    color: #222 !important;
+}
+body.light-theme td {
+    background: #fff !important;
+    color: #222 !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+}
+body.light-theme tr {
+    background: #fff !important;
+    color: #222 !important;
+}
+
     </style>
 </head>
 <body>
+<!-- Botão de alternância de tema -->
+<button id="theme-toggle" style="position:fixed;top:18px;right:24px;z-index:9999;background:var(--card);color:var(--accent);border:none;padding:10px 14px;border-radius:50px;font-size:18px;box-shadow:0 2px 8px #0002;cursor:pointer;transition:background 0.2s;" onclick="toggleTheme()">🌙</button>
+
 
 <div id="cloud-status">SINCRONIZANDO...</div>
 
@@ -212,7 +547,8 @@ body.public-view .main-wrapper {
     </div>
 </div>
 
-<div class="main-wrapper">
+<div class="container-fluid d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="main-wrapper">
     <div class="calc-col">
         <div class="calc-card">
             <div style="text-align:center; margin-bottom:15px; font-size:10px; font-weight:800; color:var(--accent); letter-spacing:2px;">ELITE V14.8 - PRO SCANNER</div>
@@ -226,31 +562,87 @@ body.public-view .main-wrapper {
             </div>
 
             <span class="label">CASA DE APOSTAS</span>
-            <div class="bookie-selector" id="bookie-slider">
-                <div class="btn-bookie active" data-color="#ff6b00" onclick="setBookie('Betano', this)">BETANO</div>
-                <div class="btn-bookie" data-color="#007a56" onclick="setBookie('Bet365', this)">BET365</div>
-                <div class="btn-bookie" data-color="#ffb80b" onclick="setBookie('Betfair', this)">BETFAIR</div>
-                <div class="btn-bookie" data-color="#df2027" onclick="setBookie('Superbet', this)">SUPERBET</div>
-                <div class="btn-bookie" data-color="#0055ff" onclick="setBookie('Novibet', this)">NOVIBET</div>
-                <div class="btn-bookie" data-color="#0055ff" onclick="setBookie('SportinBet', this)">SPORTINGBET</div>
-                <div class="btn-bookie" data-color="#0055ff" onclick="setBookie('Stake', this)">STAKE</div>
-                <div class="btn-bookie" data-color="#0a5c0a" onclick="setBookie('Pagolbet', this)">PAGOLBET</div>
-                <div class="btn-bookie" data-color="#FF6D2D" onclick="setBookie('BetpontoBet', this)">BETPONTOBET</div>
-				<div class="btn-bookie" data-color="#0055ff" onclick="setBookie('PixBet', this)">PIXBET</div>
-                <div class="btn-bookie" data-color="#1C1C1C" onclick="setBookie('ZeroUm', this)">ZEROUM</div>
-                <div class="btn-bookie" data-color="#FFD700" onclick="setBookie('JogodeOuro', this)">JOGODEOURO</div>
-                <div class="btn-bookie" data-color="#ff6b00" onclick="setBookie('Esportiva', this)">ESPORTIVA</div>
-				<div class="btn-bookie" data-color="#0055ff" onclick="setBookie('EsportedaSorte', this)">ESPORTEDASORTE</div>
-                <div class="btn-bookie" data-color="#0055ff" onclick="setBookie('OleyBet', this)">OLEYBET</div>
-                <div class="btn-bookie" data-color="#FFD700" onclick="setBookie('BetMGM', this)">BETMGM</div>
-                <div class="btn-bookie" data-color="#8e44ad" onclick="setBookie('Pinnacle', this)">PINNACLE</div>
-            </div>
+            <button class="btn-scan" style="margin-bottom:10px; background:#18181b; color:var(--accent); border:1px solid var(--accent);" data-bs-toggle="modal" data-bs-target="#modal-bookies">
+                Selecionar Casa: <span id="selected-bookie-label" style="font-weight:800; color:var(--accent)">BETANO</span>
+            </button>
+
+            <!-- Modal de seleção de casas -->
+                        <div class="modal fade" id="modal-bookies" tabindex="-1" aria-labelledby="modalBookiesLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content" style="background:#18181b; border:1px solid var(--accent); border-radius:20px;">
+                                    <div class="modal-header border-0" style="background:transparent;">
+                                        <h6 class="modal-title label" id="modalBookiesLabel" style="color:var(--accent); font-size:12px;">Selecione a Casa de Apostas</h6>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar" style="filter:invert(1);"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row g-2 justify-content-center">
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#0055ff" onclick="selectBookieModal('BandBet', this)">BANDBET</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#007a56" onclick="selectBookieModal('Bet365', this)">BET365</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#ffb80b" onclick="selectBookieModal('Betfair', this)">BETFAIR</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#FFD700" onclick="selectBookieModal('BetMGM', this)">BETMGM</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#ff6b00" onclick="selectBookieModal('Betano', this)">BETANO</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#FF6D2D" onclick="selectBookieModal('BetpontoBet', this)">BETPONTOBET</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#FFD700" onclick="selectBookieModal('Betsul', this)">BETSUL</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#ff6b00" onclick="selectBookieModal('Esportiva', this)">ESPORTIVA</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#0055ff" onclick="selectBookieModal('EsportedaSorte', this)">ESPORTEDASORTE</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#1e90ff" onclick="selectBookieModal('Faz1bet', this)">FAZ1BET</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#FFD700" onclick="selectBookieModal('GoldeBet', this)">GOLDEBET</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#FFD700" onclick="selectBookieModal('JogodeOuro', this)">JOGODEOURO</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#0055ff" onclick="selectBookieModal('Novibet', this)">NOVIBET</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#0a5c0a" onclick="selectBookieModal('Pagolbet', this)">PAGOLBET</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#8e44ad" onclick="selectBookieModal('Pinnacle', this)">PINNACLE</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#0055ff" onclick="selectBookieModal('PixBet', this)">PIXBET</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#0055ff" onclick="selectBookieModal('OleyBet', this)">OLEYBET</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#0055ff" onclick="selectBookieModal('SportinBet', this)">SPORTINGBET</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#0055ff" onclick="selectBookieModal('Stake', this)">STAKE</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#df2027" onclick="selectBookieModal('Superbet', this)">SUPERBET</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#df2027" onclick="selectBookieModal('UpBet', this)">UPBET</div></div>
+                                            <div class="col-6 col-md-4 col-lg-3"><div class="btn-bookie w-100" data-color="#1C1C1C" onclick="selectBookieModal('ZeroUm', this)">ZEROUM</div></div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-0 d-flex justify-content-center" style="background:transparent;">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
             <div id="combo-builder" class="combo-panel">
+
+                <select id="combo-cf-type" class="combo-input" style="margin-bottom:10px; width:100%; font-size:12px;" onchange="runCombo()">
+                    <option value="">Tipo de Combo (Ajuste CF)</option>
+                    <optgroup label="Futebol">
+                                                                        <option value="dupla_ambas">Dupla Chance + Ambas Marcam</option>
+                                                <option value="vencer_jogador_marcar">Vencer + Jogador Marcar</option>
+                        <option value="vencerht_ambosnao">Vencer HT + Ambos Marcam Não</option>
+                        <option value="vencer_over15">Vencer + Over 1.5</option>
+                        <option value="vencer_over25">Vencer + Over 2.5</option>
+                        <option value="ambas_over25">Ambas Marcam + Over 2.5</option>
+                        <option value="vencer_under35">Vencer + Under 3.5</option>
+                        <option value="vencer_under25">Vencer + Under 2.5</option>
+                        <option value="escanteios_over_gols">Escanteios Over + Over Gols</option>
+                        <option value="ambas_over35">Ambas Marcam + Over 3.5</option>
+                    </optgroup>
+                    <optgroup label="Basquete">
+                                                <option value="vencer_under_pontos">Vencer + Under Pontos</option>
+                        <option value="ml_over">Vencer (ML) + Over Pontos</option>
+                        <option value="handicap_neg_over">Handicap Negativo + Over</option>
+                        <option value="jogador_over_vitoria">Jogador X Over Pontos + Vitória</option>
+                        <option value="handicap_pos_under">Handicap Positivo + Under</option>
+                    </optgroup>
+                    <optgroup label="Tênis">
+                        <option value="vencer2x0_under">Vencer 2-0 (Sets) + Under Games</option>
+                        <option value="vencer_over_games">Vencer Jogo + Over Games</option>
+                        <option value="vencer1set_vencerjogo">Vencer 1º Set + Vencer Jogo</option>
+                        <option value="overgames_oversets">Over Games + Over Sets (3 sets)</option>
+                    </optgroup>
+                </select>
                 <div class="combo-grid">
                     <input type="number" id="c1" class="combo-input" placeholder="Ref 1" oninput="runCombo()">
                     <input type="number" id="c2" class="combo-input" placeholder="Ref 2" oninput="runCombo()">
                     <input type="number" id="c3" class="combo-input" placeholder="Ref 3" oninput="runCombo()">
+                </div>
+                <div style="margin-top:10px; text-align:center;">
                 </div>
             </div>
 
@@ -313,20 +705,49 @@ body.public-view .main-wrapper {
     </div>
 
     <div class="dash-col">
-        <div class="chart-card">
+            <div class="chart-card">
             <div class="stats-row" style="display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin-bottom:15px;">
                 <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
-                    <span class="label">LUCRO TOTAL</span><div id="stat-pl" style="font-weight:bold;">0.00u</div>
+                    <span class="label">LUCRO TOTAL (R$)</span><div id="stat-pl" style="font-weight:bold;">R$ 0,00</div>
                 </div>
                 <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
                     <span class="label">YIELD (ROI)</span><div id="stat-roi" style="font-weight:bold;">0.0%</div>
                 </div>
                 <div style="background:#111315; padding:12px; border-radius:10px; text-align:center;">
-                    <span class="label">TOTAL INVESTIDO</span><div id="stat-invested" style="font-weight:bold;">0.00u</div>
+                    <span class="label">TOTAL INVESTIDO (R$)</span><div id="stat-invested" style="font-weight:bold;">R$ 0,00</div>
+                </div>
+            </div>
+            <!-- Linha de métricas profissionais -->
+            <div class="stats-row" id="pro-metrics-row" style="display:grid; grid-template-columns: repeat(5,1fr); gap:10px; margin-bottom:15px;">
+                <div style="background:#181a1d; padding:10px; border-radius:10px; text-align:center;">
+                    <span class="label">WIN RATE (%)</span><div id="stat-winrate" style="font-weight:bold;">0.0%</div>
+                </div>
+                <div style="background:#181a1d; padding:10px; border-radius:10px; text-align:center;">
+                    <span class="label">ROI PROF. (%)</span><div id="stat-roiprof" style="font-weight:bold;">0.0%</div>
+                </div>
+                <div style="background:#181a1d; padding:10px; border-radius:10px; text-align:center;">
+                    <span class="label">ODD MÉDIA</span><div id="stat-avgodd" style="font-weight:bold;">0.00</div>
+                </div>
+                <div style="background:#181a1d; padding:10px; border-radius:10px; text-align:center;">
+                    <span class="label">STAKE MÉDIA (u)</span><div id="stat-avgstake" style="font-weight:bold;">0.00u</div>
+                </div>
+                <div style="background:#181a1d; padding:10px; border-radius:10px; text-align:center;">
+                    <span class="label">MAX DRAWDOWN</span><div id="stat-drawdown" style="font-weight:bold;">0.00u (0.0%)</div>
                 </div>
             </div>
 
-            <div style="height:200px;"><canvas id="profitChart"></canvas></div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; width: 100%; margin-bottom: 24px;">
+                <div style="background: none;">
+                    <div style="font-size:14px; color:var(--accent); font-weight:800; margin-bottom:8px; text-align:left; letter-spacing:1px;">Lucro Acumulado (u)</div>
+                    <div style="height:240px;"><canvas id="profitChart"></canvas></div>
+                </div>
+                <div style="background: none;">
+                    <div style="font-size:14px; color:var(--accent); font-weight:800; margin-bottom:8px; text-align:left; letter-spacing:1px;">Lucro Mensal (R$)</div>
+                    <div style="height:240px;"><canvas id="monthlyBarChart"></canvas></div>
+                </div>
+            </div>
+
+
 
             <div class="advanced-stats">
                 <div class="stat-box"><span class="label">HOJE</span><div id="stat-today" class="val">0.00u</div></div>
@@ -344,10 +765,57 @@ body.public-view .main-wrapper {
                 <table id="history-table"></table>
             </div>
         </div>
+        </div>
     </div>
 </div>
 
+<!-- Bootstrap JS (opcional, para componentes interativos) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Alternância de tema claro/escuro
+    function toggleTheme() {
+        const body = document.body;
+        const btn = document.getElementById('theme-toggle');
+        body.classList.toggle('light-theme');
+        if (body.classList.contains('light-theme')) {
+            btn.innerText = '☀️';
+            localStorage.setItem('elite-theme', 'light');
+        } else {
+            btn.innerText = '🌙';
+            localStorage.setItem('elite-theme', 'dark');
+        }
+    }
+    // Carregar preferência do usuário
+    window.addEventListener('DOMContentLoaded', function() {
+        const theme = localStorage.getItem('elite-theme');
+        if (theme === 'light') {
+            document.body.classList.add('light-theme');
+            document.getElementById('theme-toggle').innerText = '☀️';
+        }
+    });
+    // Função global para compartilhar o resumo por casas
+    window.shareAllHousesReport = function() {
+        if (!historyData || historyData.length === 0) {
+            alert('Nenhum dado para compartilhar!');
+            return;
+        }
+        // Agrupa por casa
+        const resumo = {};
+        historyData.forEach(b => {
+            if (!resumo[b.bookie]) resumo[b.bookie] = {pl: 0, count: 0};
+            resumo[b.bookie].pl += b.pl;
+            resumo[b.bookie].count++;
+        });
+        // Ordena alfabeticamente
+        const casas = Object.keys(resumo).sort();
+        let texto = '🏠 *RESUMO POR CASAS*\n';
+        casas.forEach(casa => {
+            texto += `\n${casa}: ${resumo[casa].count} bets | Lucro: ${(resumo[casa].pl*10).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} R$`;
+        });
+        texto += '\n\n_Gerado por Elite V14.8 Terminal_';
+        textToShare = texto;
+        document.getElementById('shareOverlay').style.display = 'flex';
+    }
     const firebaseConfig = {
         apiKey: "AIzaSyA7trGWz9RnvuKrK2MULn6YYlu86dBJFdU",
         authDomain: "eliteterminal-2e66e.firebaseapp.com",
@@ -367,40 +835,7 @@ body.public-view .main-wrapper {
     let activeBookie = 'Betano';
     let currentEditingId = null;
 
-    function triggerFileSelect() { document.getElementById('ocr-upload').click(); }
 
-    document.addEventListener('paste', async (e) => {
-        const items = e.clipboardData.items;
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1) {
-                const blob = items[i].getAsFile();
-                processPrint(blob);
-            }
-        }
-    });
-
-    async function processPrint(file) {
-        if (!file) return;
-        const btn = document.getElementById('btn-ocr');
-        btn.innerText = "⌛ LENDO TEXTO...";
-        btn.style.borderColor = "var(--gold)";
-        btn.style.color = "var(--gold)";
-        try {
-            const { data: { text } } = await Tesseract.recognize(file, 'por', { logger: m => console.log(m) });
-            parseBetData(text);
-            btn.innerText = "✅ SCAN CONCLUÍDO";
-            btn.style.borderColor = "var(--green)";
-            btn.style.color = "var(--green)";
-            setTimeout(() => {
-                btn.innerText = "📷 SCAN PRINT / CTRL+V";
-                btn.style.borderColor = "var(--accent)";
-                btn.style.color = "var(--accent)";
-            }, 3000);
-        } catch (e) {
-            alert("Erro ao ler imagem.");
-            btn.innerText = "❌ ERRO NO SCAN";
-        }
-    }
 
     function parseBetData(rawText) {
         let cleanRaw = rawText.replace(/[|@#$_\[\]{}]/g, ' ');
@@ -471,8 +906,22 @@ body.public-view .main-wrapper {
         const b = parseFloat(values.bookie), s = parseFloat(document.getElementById('stake-res').innerText);
         if(!b || isNaN(s) || s <= 0) return;
         const id = Date.now().toString();
-        db.child(id).set({ id, odd: b, stake: s, ref: parseFloat(values.fair)||0, evento: document.getElementById('input-evento').value.toUpperCase()||'EVENTO', mercado: document.getElementById('input-mercado').value.toUpperCase()||'MERCADO', bookie: activeBookie, status: 'WAIT', pl: 0, date: new Date().toLocaleDateString(), timestamp: Date.now() });
-        
+        const newBet = {
+            id,
+            odd: b,
+            stake: s,
+            ref: parseFloat(values.fair)||0,
+            evento: document.getElementById('input-evento').value.toUpperCase()||'EVENTO',
+            mercado: document.getElementById('input-mercado').value.toUpperCase()||'MERCADO',
+            bookie: activeBookie,
+            status: 'WAIT',
+            pl: 0,
+            date: new Date().toLocaleDateString(),
+            timestamp: Date.now()
+        };
+
+        db.child(id).set(newBet);
+
         // CORREÇÃO: MANTER DADOS SEM RECARREGAR
         document.getElementById('input-evento').value = '';
         document.getElementById('input-mercado').value = '';
@@ -485,13 +934,116 @@ body.public-view .main-wrapper {
         calculate();
     }
 
+
+    // Tabela de coeficientes de correlação por esporte
+    const coeficientesCorrelacao = {
+        futebol: 0.92,
+        basquete: 0.95,
+        tenis: 0.98,
+        outros: 1.00
+    };
+
+    // Tabela de cf para combos correlacionados (Ambas + Over, Over + ML, etc)
+    const cfCombosCorrelacionados = [
+        { regex: /ambas.*(sim|yes).*over|over.*ambas/i, cf: 0.78 }, // Ambas + Over
+        { regex: /ambas.*(sim|yes).*ml|ml.*ambas/i, cf: 0.82 },     // Ambas + ML
+        { regex: /over.*ml|ml.*over/i, cf: 0.85 },                  // Over + ML
+        { regex: /ambas.*(sim|yes).*cantos|cantos.*ambas/i, cf: 0.85 }, // Ambas + Cantos
+        { regex: /over.*cantos|cantos.*over/i, cf: 0.88 },          // Over + Cantos
+        { regex: /ambas.*(sim|yes).*cart(ão|oes|oes|ões|oes|oes|ões).*over|over.*ambas.*cart(ão|oes|oes|ões|oes|oes|ões)/i, cf: 0.80 }, // Ambas + Over Cartões
+        { regex: /over.*cart(ão|oes|oes|ões|oes|oes|ões).*ambas|ambas.*over.*cart(ão|oes|oes|ões|oes|oes|ões)/i, cf: 0.80 }, // Over + Ambas + Cartões
+        // Adicione mais padrões se necessário
+    ];
+
+    // Função para detectar cf de combo correlacionado
+    function detectarCoeficienteCombo(mercado, esporte) {
+        if (typeof mercado !== 'string') return coeficientesCorrelacao[esporte] || 1.00;
+        for (let i = 0; i < cfCombosCorrelacionados.length; i++) {
+            if (cfCombosCorrelacionados[i].regex.test(mercado)) {
+                return cfCombosCorrelacionados[i].cf;
+            }
+        }
+        return coeficientesCorrelacao[esporte] || 1.00;
+    }
+
+
+    // Função para remover a margem (No-Vig) de uma odd
+    function noVigFairOdds(odd, oddsArray) {
+        // oddsArray: todas as odds do mercado (ex: [odd1, odd2])
+        // odd: odd para remover a margem
+        // 1. Calcular as probabilidades implícitas
+        const probs = oddsArray.map(o => 1 / o);
+        // 2. Soma das probabilidades (overround)
+        const overround = probs.reduce((a, b) => a + b, 0);
+        // 3. Probabilidade justa
+        const fairProb = (1 / odd) / overround;
+        // 4. Odd justa (No-Vig)
+        return 1 / fairProb;
+    }
+
+    // Função profissional de combo (Stakinho) com No-Vig exato e cf automático
+    function calcularComboPro(odds) {
+        // odds: array de odds (ex: [1.80, 1.90, 2.00])
+        // 1. Limpar Margem (No-Vig) para cada odd
+        let oddsLimpas = [];
+        for (let i = 0; i < odds.length; i++) {
+            let oddsArray = odds.length > 1 ? odds : [odds[i], 2.00];
+            oddsLimpas.push(noVigFairOdds(odds[i], oddsArray));
+        }
+        // 2. Probabilidades reais
+        const probs = oddsLimpas.map(odd => 1 / odd);
+        // 3. Multiplicação das probabilidades
+        const probCombo = probs.reduce((acc, p) => acc * p, 1);
+        // 4. Fator de Correlação: prioridade para seleção manual
+        let cf = 1.0;
+        let cfLabel = '';
+        const comboType = document.getElementById('combo-cf-type')?.value || '';
+        // Tabela de CFs por combo
+        const cfTable = {
+            'dupla_ambas': {cf: 0.5, label: 'Dupla Chance + Ambas Marcam (0.80)'},
+                                                'vencer_under_pontos': {cf: 0.80, label: 'Vencer + Under Pontos (0.80)'}, // Basquete
+                                    'vencer_jogador_marcar': {cf: 0.85, label: 'Vencer + Jogador Marcar (0.85)'},
+                        'vencerht_ambosnao': {cf: 0.92, label: 'Vencer HT + Ambos Marcam Não (0.92)'},
+            // Futebol
+            'vencer_over15': {cf: 0.88, label: 'Vencer + Over 1.5 (0.88)'},
+            'vencer_over25': {cf: 0.91, label: 'Vencer + Over 2.5 (0.91)'},
+            'ambas_over25': {cf: 0.85, label: 'Ambas Marcam + Over 2.5 (0.85)'},
+            'vencer_under35': {cf: 1.05, label: 'Vencer + Under 3.5 (1.05)'},
+            'vencer_under25': {cf: 1.10, label: 'Vencer + Under 2.5 (1.10)'},
+            'escanteios_over_gols': {cf: 0.95, label: 'Escanteios Over + Over Gols (0.95)'},
+            'ambas_over35': {cf: 0.80, label: 'Ambas Marcam + Over 3.5 (0.80)'},
+            // Basquete
+            'ml_over': {cf: 0.96, label: 'Vencer (ML) + Over Pontos (0.96)'},
+            'handicap_neg_over': {cf: 0.94, label: 'Handicap Negativo + Over (0.94)'},
+            'jogador_over_vitoria': {cf: 0.88, label: 'Jogador X Over Pontos + Vitória (0.88)'},
+            'handicap_pos_under': {cf: 0.92, label: 'Handicap Positivo + Under (0.92)'},
+            // Tênis
+            'vencer2x0_under': {cf: 0.82, label: 'Vencer 2-0 (Sets) + Under Games (0.82)'},
+            'vencer_over_games': {cf: 1.12, label: 'Vencer Jogo + Over Games (1.12)'},
+            'vencer1set_vencerjogo': {cf: 0.75, label: 'Vencer 1º Set + Vencer Jogo (0.75)'},
+            'overgames_oversets': {cf: 0.70, label: 'Over Games + Over Sets (3 sets) (0.70)'},
+        };
+        if (cfTable[comboType]) {
+            cf = cfTable[comboType].cf;
+            cfLabel = cfTable[comboType].label;
+        } else {
+            // fallback: regex automático
+            let mercado = document.getElementById('input-mercado')?.value || '';
+            cf = detectarCoeficienteCombo(mercado);
+            cfLabel = 'Auto CF=' + cf;
+        }
+        // 5. Odd Justa Correlacionada
+        const oddCorrelacionada = 1 / probCombo * cf;
+        // Retorna odd e label para log
+        return { odd: oddCorrelacionada.toFixed(2), cfLabel };
+    }
+
     function runCombo() {
         const r1 = parseFloat(document.getElementById('c1').value) || 0;
         const r2 = parseFloat(document.getElementById('c2').value) || 0;
         const r3 = parseFloat(document.getElementById('c3').value) || 0;
-
         let odds = [r1, r2, r3].filter(o => o > 1);
-        
+
         if (odds.length < 2) {
             document.getElementById('val-fair').value = '';
             values.fair = '';
@@ -499,49 +1051,267 @@ body.public-view .main-wrapper {
             return;
         }
 
-        let fairOdds = odds.map(o => o * 1.02);
-        let combinedFair = fairOdds.reduce((acc, curr) => acc * curr, 1);
-        let desconto = odds.length === 2 ? 0.15 : 0.25;
-        let finalFair = combinedFair * (1 - desconto);
-
-        document.getElementById('val-fair').value = finalFair.toFixed(2);
-        values.fair = finalFair.toFixed(2);
-        document.getElementById('algo-log').innerText = `COMBO: ${odds.length} MERCADOS | DESC. ${desconto*100}%`;
-        calculate(); 
+        // Lógica profissional de combo
+        const { odd, cfLabel } = calcularComboPro(odds);
+        document.getElementById('val-fair').value = odd;
+        values.fair = odd;
+        document.getElementById('algo-log').innerText = `COMBO PRO: ${cfLabel}`;
+        calculate();
     }
 
+
+    // Listener global: carrega todo o histórico de uma vez
     db.on('value', snap => {
-        const statusEl = document.getElementById('cloud-status'); statusEl.innerText = "NUVEM ATIVA"; statusEl.style.color = "var(--green)";
-        const val = snap.val(); historyData = val ? Object.values(val).sort((a,b) => b.timestamp - a.timestamp) : [];
+        const statusEl = document.getElementById('cloud-status');
+        statusEl.innerText = "NUVEM ATIVA";
+        statusEl.style.color = "var(--green)";
+        const val = snap.val();
+        historyData = val
+            ? Object.values(val)
+                .filter(b => b && b.id && b.timestamp)
+                .sort((a,b) => b.timestamp - a.timestamp)
+            : [];
         renderStats();
     });
 
     function renderStats() {
+                // --- MÉTRICAS PROFISSIONAIS ---
+                let winCount = 0, totalCount = 0, sumOdd = 0, sumStake = 0, sumPL = 0, sumInvest = 0;
+                let banca = 0, maxBanca = 0, maxDrawdown = 0;
+                let bancaArr = [0];
+                historyData.forEach(b => {
+                    if (b.status !== 'WAIT' && b.status !== 'VOID') {
+                        totalCount++;
+                        sumOdd += b.odd;
+                        sumStake += b.stake;
+                        sumPL += b.pl;
+                        if (b.pl > 0) winCount++;
+                        banca += b.pl;
+                        bancaArr.push(banca);
+                        if (banca > maxBanca) maxBanca = banca;
+                        let drawdown = maxBanca - banca;
+                        if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+                    }
+                });
+                // Win Rate (%)
+                let winRate = totalCount > 0 ? (winCount / totalCount * 100) : 0;
+                // ROI Profissional (%)
+                let roiProf = sumInvest > 0 ? (sumPL / sumInvest * 100) : 0;
+                // Odd Média
+                let avgOdd = totalCount > 0 ? (sumOdd / totalCount) : 0;
+                // Stake Média
+                let avgStake = totalCount > 0 ? (sumStake / totalCount) : 0;
+                // Máximo Drawdown (%)
+                let maxDrawdownPct = maxBanca > 0 ? (maxDrawdown / maxBanca * 100) : 0;
+                // Atualiza cartões
+                document.getElementById('stat-winrate').innerText = winRate.toFixed(1) + '%';
+                document.getElementById('stat-roiprof').innerText = roiProf.toFixed(1) + '%';
+                document.getElementById('stat-avgodd').innerText = avgOdd.toFixed(2);
+                document.getElementById('stat-avgstake').innerText = avgStake.toFixed(2) + 'u';
+                document.getElementById('stat-drawdown').innerText = maxDrawdown.toFixed(2) + 'u (' + maxDrawdownPct.toFixed(1) + '%)';
         const tb = document.getElementById('history-table'); if(!tb) return;
-        tb.innerHTML = ''; let totalPL = 0, invest = 0, todayPL = 0, weekPL = 0, monthPL = 0; const now = Date.now();
+        let html = '';
+        let monthPL = 0, monthInvest = 0, monthToday = 0, monthWeek = 0, month30 = 0, monthCount = 0;
+        let totalInvest = 0;
+        let plTotal = 0, investTotal = 0;
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
         historyData.forEach(b => {
-            totalPL += b.pl; if(b.status!=='WAIT' && b.status!=='VOID') invest += b.stake;
-            const diffDays = (now - b.timestamp) / (1000 * 60 * 60 * 24);
-            if(diffDays <= 1) todayPL += b.pl; if(diffDays <= 7) weekPL += b.pl; if(diffDays <= 30) monthPL += b.pl;
+            let [d, m, y] = b.date.split('/');
+            // Soma o investimento total desde a primeira aposta
+            if(b.status!=='WAIT' && b.status!=='VOID') {
+                totalInvest += b.stake;
+                investTotal += b.stake;
+                plTotal += b.pl;
+            }
+            // Rolling window para HOJE, SEMANA, MÊS (30 dias)
+            const diffDays = (now.getTime() - b.timestamp) / (1000 * 60 * 60 * 24);
+            if(diffDays <= 1) monthToday += b.pl;
+            if(diffDays <= 7) monthWeek += b.pl;
+            if(diffDays <= 30) month30 += b.pl;
+            // Mês corrente (para outros usos)
+            let isCurrentMonth = y && m && parseInt(m) === currentMonth && parseInt(y) === currentYear;
+            if (isCurrentMonth) {
+                monthPL += b.pl;
+                if(b.status!=='WAIT' && b.status!=='VOID') monthInvest += b.stake;
+                monthCount++;
+            }
             let cls = 'b-wait'; if(b.status.includes('WIN')) cls = 'b-win'; else if(b.status.includes('RED')) cls = 'b-red'; else if(b.status === 'VOID') cls = 'b-void';
-            tb.innerHTML += `<tr><td style="width:25px"><button class="btn-share-row" onclick="shareHistoryBet('${b.id}')">📲</button></td><td><div style="color:var(--accent); font-size:9px; font-weight:800;">[${b.bookie}]</div><div style="color:white; font-weight:bold; font-size:11px;">${b.evento || b.date}</div><div style="color:var(--gold); font-size:10px; font-weight:800; margin-top:2px;">${b.mercado || 'MERCADO EM ABERTO'}</div></td><td style="text-align:center">@${b.odd.toFixed(2)}</td><td style="text-align:center">${b.stake.toFixed(2)}u</td><td style="color:${b.pl>=0?'var(--green)':'var(--red)'}">${b.pl.toFixed(2)}</td><td><span class="badge ${cls}" onclick="openStatusMenu('${b.id}', this)">${b.status}</span></td><td><button class="btn-del" onclick="deleteBet('${b.id}')">×</button></td></tr>`;
+            html += `<tr><td style="width:25px"><button class="btn-share-row" onclick="shareHistoryBet('${b.id}')">📲</button></td><td><div style="color:var(--accent); font-size:9px; font-weight:800;">[${b.bookie}]</div><div style="color:white; font-weight:bold; font-size:11px;">${b.evento || b.date}</div><div style="color:var(--gold); font-size:10px; font-weight:800; margin-top:2px;">${b.mercado || 'MERCADO EM ABERTO'}</div></td><td style="text-align:center">@${b.odd.toFixed(2)}</td><td style="text-align:center">${b.stake.toFixed(2)}u</td><td style="color:${b.pl>=0?'var(--green)':'var(--red)'}">${b.pl.toFixed(2)}</td><td><span class="badge ${cls}" onclick="openStatusMenu('${b.id}', this)">${b.status}</span></td><td><button class="btn-del" onclick="deleteBet('${b.id}')">×</button></td></tr>`;
         });
-        document.getElementById('stat-pl').innerText = totalPL.toFixed(2)+'u';
-        document.getElementById('stat-roi').innerText = (invest>0?(totalPL/invest*100):0).toFixed(1)+'%';
-        document.getElementById('stat-invested').innerText = invest.toFixed(2)+'u';
-        document.getElementById('stat-today').innerText = todayPL.toFixed(2)+'u';
-        document.getElementById('stat-week').innerText = weekPL.toFixed(2)+'u';
-        document.getElementById('stat-month').innerText = monthPL.toFixed(2)+'u';
+        tb.innerHTML = html;
+        // Lucro total acumulado desde a primeira aposta
+        document.getElementById('stat-pl').innerText = 'R$ ' + (plTotal * 10).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        // ROI total acumulado
+        document.getElementById('stat-roi').innerText = (investTotal>0?(plTotal/investTotal*100):0).toFixed(1)+'%';
+        document.getElementById('stat-invested').innerText = 'R$ ' + (totalInvest * 10).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        document.getElementById('stat-today').innerText = monthToday.toFixed(2)+'u';
+        document.getElementById('stat-week').innerText = monthWeek.toFixed(2)+'u';
+        document.getElementById('stat-month').innerText = month30.toFixed(2)+'u';
         document.getElementById('stat-count-total').innerText = historyData.length + ' Bets';
         updateChart();
     }
 
     function updateChart() {
+        // Gráfico de linha: Lucro Acumulado Profissional em Unidades (u)
         const ctx = document.getElementById('profitChart').getContext('2d');
-        const chartData = [...historyData].reverse();
-        let labels = [], dataPoints = [], accum = 0; chartData.forEach(b => { labels.push(b.date); accum += b.pl; dataPoints.push(accum); });
-        if (myChart) myChart.destroy();
-        myChart = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [{ label: 'PL', data: dataPoints, borderColor: '#9d7df2', fill: true, tension: 0.3, backgroundColor: 'rgba(157,125,242,0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#222' } } } } });
+        let labels = [], dataPoints = [];
+        let lucroAcumulado = 0; // começa do zero
+        const sortedHistory = [...historyData].sort((a, b) => a.timestamp - b.timestamp);
+        sortedHistory.forEach(b => {
+            lucroAcumulado += b.pl; // 1 unidade = 1u
+            labels.push(`${b.date} - ${b.evento || ''}`);
+            dataPoints.push(lucroAcumulado);
+        });
+        // Gradiente premium roxo para transparente
+        const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+        gradient.addColorStop(0, 'rgba(157,125,242,0.35)'); // Roxo opaco topo
+        gradient.addColorStop(1, 'rgba(157,125,242,0.00)'); // Transparente base
+
+        if (!window.myChart) {
+            window.myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Lucro Acumulado (u)',
+                        data: dataPoints,
+                        borderColor: '#9d7df2',
+                        fill: true,
+                        tension: 0.35, // Smoothing
+                        backgroundColor: gradient,
+                        pointRadius: 0, // Esconde pontos
+                        pointHoverRadius: 5, // Mostra só no hover
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#9d7df2',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: {
+                            grid: { color: '#222' },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + 'u';
+                                }
+                            },
+                            // Linha de referência zero
+                            afterDataLimits: function(axis) {
+                                if (axis.min > 0) axis.min = 0;
+                                if (axis.max < 0) axis.max = 0;
+                            }
+                        }
+                    },
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) { return context[0].label; },
+                                label: function(context) {
+                                    return 'Lucro Acumulado: ' + context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + 'u';
+                                }
+                            }
+                        },
+                        legend: { display: false },
+                        annotation: {
+                            annotations: {
+                                zeroLine: {
+                                    type: 'line',
+                                    yMin: 0,
+                                    yMax: 0,
+                                    borderColor: '#b0b0b0',
+                                    borderWidth: 2,
+                                    borderDash: [6, 6],
+                                    label: {
+                                        display: true,
+                                        content: '0.00u',
+                                        position: 'start',
+                                        color: '#b0b0b0',
+                                        font: { family: 'JetBrains Mono', size: 10, weight: 'bold' },
+                                        backgroundColor: 'rgba(0,0,0,0.0)'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [window.ChartAnnotationPlugin].filter(Boolean)
+            });
+        } else {
+            window.myChart.data.labels = labels;
+            window.myChart.data.datasets[0].data = dataPoints;
+            window.myChart.data.datasets[0].backgroundColor = gradient;
+            window.myChart.update();
+        }
+
+        // Gráfico de barras agrupadas: lucro mensal (em reais) e total apostado
+        var barCtx = document.getElementById('monthlyBarChart').getContext('2d');
+        const monthlyPL = {}; // Lucro líquido por mês
+        const monthlyInvest = {}; // Total apostado por mês
+        sortedHistory.forEach(b => {
+            let [d, m, y] = b.date.split('/');
+            if (!y || !m) return;
+            const key = `${y}-${m.padStart(2, '0')}`;
+            if (!monthlyPL[key]) monthlyPL[key] = 0;
+            if (!monthlyInvest[key]) monthlyInvest[key] = 0;
+            monthlyPL[key] += b.pl * 10; // 1u = R$10
+            if (b.status !== 'WAIT' && b.status !== 'VOID') monthlyInvest[key] += b.stake * 10;
+        });
+        const sortedKeys = Object.keys(monthlyPL).concat(Object.keys(monthlyInvest)).filter((v, i, a) => a.indexOf(v) === i).sort();
+        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const barLabels = sortedKeys.map(key => {
+            const [y, m] = key.split('-');
+            return `${monthNames[parseInt(m, 10) - 1]}/${y.slice(-2)}`;
+        });
+        const lucroData = sortedKeys.map(key => monthlyPL[key] || 0);
+        const investData = sortedKeys.map(key => monthlyInvest[key] || 0);
+        if (window.monthlyBarChart && typeof window.monthlyBarChart.destroy === 'function') {
+            window.monthlyBarChart.destroy();
+        }
+        window.monthlyBarChart = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: barLabels,
+                datasets: [
+                    {
+                        label: 'Lucro Mensal (R$)',
+                        data: lucroData,
+                        backgroundColor: lucroData.map(v => v >= 0 ? 'rgba(127,255,127,0.7)' : 'rgba(255,127,127,0.7)'),
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Total Apostado (R$)',
+                        data: investData,
+                        backgroundColor: 'rgba(125, 125, 255, 0.5)',
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true } },
+                scales: {
+                    x: { grid: { color: '#222' }, stacked: false },
+                    y: {
+                        grid: { color: '#222' },
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 0});
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+
     }
 
 function openStatusMenu(id, element) {
@@ -556,7 +1326,19 @@ function openStatusMenu(id, element) {
     menu.style.left = (rect.left - 150) + 'px'; 
 
 }
-    function confirmStatus(status) { if(!currentEditingId) return; const b = historyData.find(x => x.id == currentEditingId); b.status = status; if(status === 'WIN') b.pl = (b.odd - 1) * b.stake; else if(status === '1/2 WIN') b.pl = ((b.odd - 1) * b.stake) / 2; else if(status === 'RED') b.pl = -b.stake; else if(status === '1/2 RED') b.pl = -b.stake / 2; else b.pl = 0; db.child(currentEditingId).update(b); document.getElementById('quickStatusMenu').style.display = 'none'; }
+    function confirmStatus(status) {
+        if(!currentEditingId) return;
+        const b = historyData.find(x => x.id == currentEditingId);
+        b.status = status;
+        if(status === 'WIN') b.pl = (b.odd - 1) * b.stake;
+        else if(status === '1/2 WIN') b.pl = ((b.odd - 1) * b.stake) / 2;
+        else if(status === 'RED') b.pl = -b.stake;
+        else if(status === '1/2 RED') b.pl = -b.stake / 2;
+        else b.pl = 0;
+        db.child(currentEditingId).update(b);
+        renderStats(); // Atualiza imediatamente
+        document.getElementById('quickStatusMenu').style.display = 'none';
+    }
     function deleteBet(id) { if(confirm("Excluir registro?")) db.child(id).remove(); }
     function clearAll() { if(confirm("LIMPAR TODO O HISTÓRICO?")) db.set(null); }
     function closeShare() { document.getElementById('shareOverlay').style.display = 'none'; }
@@ -585,7 +1367,17 @@ function openStatusMenu(id, element) {
     });
 
     function setTarget(t) { let input = document.getElementById('val-'+t); if (input) input.focus(); }
-    function setBookie(name, el) { activeBookie = name; document.querySelectorAll('.btn-bookie').forEach(btn => { btn.classList.remove('active'); btn.style.borderColor = '#2d3035'; btn.style.color = 'var(--dim)'; }); el.classList.add('active'); el.style.borderColor = el.getAttribute('data-color'); el.style.color = '#fff'; }
+    function setBookie(name, el) {
+        activeBookie = name;
+        document.getElementById('selected-bookie-label').innerText = name.toUpperCase();
+    }
+
+    function selectBookieModal(name, el) {
+        setBookie(name, el);
+        // Fecha o modal Bootstrap corretamente
+        var modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bookies'));
+        modal.hide();
+    }
     function updateVal(key, val) { values[key] = val; calculate(); }
     function press(key) { let input = document.getElementById('val-' + currentTarget); if (key === 'DEL') values[currentTarget] = values[currentTarget].slice(0, -1); else values[currentTarget] += key; input.value = values[currentTarget]; calculate(); }
     function toggleNumpad() { document.getElementById('numpad-control').classList.toggle('visible'); }
@@ -613,7 +1405,30 @@ function openStatusMenu(id, element) {
     }
 }
 
-// Chame assim que o script carregar
+// Função para compartilhar o resumo por casas
+window.shareAllHousesReport = function() {
+    if (!historyData || historyData.length === 0) {
+        alert('Nenhum dado para compartilhar!');
+        return;
+    }
+    // Agrupa por casa
+    const resumo = {};
+    historyData.forEach(b => {
+        if (!resumo[b.bookie]) resumo[b.bookie] = {pl: 0, count: 0};
+        resumo[b.bookie].pl += b.pl;
+        resumo[b.bookie].count++;
+    });
+    // Ordena alfabeticamente
+    const casas = Object.keys(resumo).sort();
+    let texto = '🏠 *RESUMO POR CASAS*\n';
+    casas.forEach(casa => {
+        texto += `\n${casa}: ${resumo[casa].count} bets | Lucro: ${(resumo[casa].pl*10).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} R$`;
+    });
+    texto += '\n\n_Gerado por Elite V14.8 Terminal_';
+    textToShare = texto;
+    document.getElementById('shareOverlay').style.display = 'flex';
+}
+
 aplicarModoPublico();
 
 </script>
